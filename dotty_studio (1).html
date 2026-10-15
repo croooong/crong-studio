@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>도트 패턴 스튜디오</title>
+<style>
+:root{--blue:#d6bd75;--deep:#17243f;--pale:#f8edc5;--line:#d8cda8;--ink:#17243f;--navy:#17243f;--butter:#f8edc5}
+*{box-sizing:border-box}body{margin:0;background:#fbf5df;color:var(--ink);font-family:"Arial","Apple SD Gothic Neo",sans-serif}
+header{height:66px;background:#f8edc5;border-bottom:2px solid #d8cda8;display:flex;align-items:center;justify-content:space-between;padding:0 5%;gap:12px}
+.logo{font-weight:900;font-size:21px;color:#17243f;letter-spacing:-.7px}.logo span{font-size:26px;margin-right:7px}
+header small{font-size:12px;color:#756943}
+main{max-width:1120px;margin:24px auto;padding:0 16px}
+h1{font-size:clamp(23px,4vw,32px);margin:0 0 7px;color:#17243f} .intro{margin:0 0 22px;color:#85764a;font-size:14px}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:stretch}
+.panel,.workspace{background:#fffdf5;border:2px solid var(--line);border-radius:17px;box-shadow:0 5px 0 #e9dfbd}
+.panel{padding:16px}.workspace{padding:16px;min-width:0}
+.tabs{display:flex;gap:5px;margin-bottom:18px}.tab{border:0;border-radius:9px;padding:10px 7px;flex:1;background:#f5efd9;color:#85764a;font-weight:700;cursor:pointer}.tab.active{background:#17243f;color:#f8edc5}
+.section{border-top:1px dashed #d8cda8;padding-top:15px;margin-top:14px}.section h3{font-size:13px;margin:0 0 11px;color:#17243f}
+.colors{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.swatch{height:29px;border-radius:50%;border:2px solid #e0d6b7;cursor:pointer}.swatch.selected{outline:3px solid #17243f;outline-offset:2px}
+input[type=color]{width:100%;height:36px;border:1px solid var(--line);border-radius:9px;background:white;padding:3px;cursor:pointer}
+.patterns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.pattern{border:2px solid #e0d6b7;background:#fffdf5;border-radius:10px;padding:8px 2px;color:#756943;cursor:pointer;font-size:12px}.pattern b{display:block;font-size:23px;margin-bottom:3px}.pattern.selected{border-color:#17243f;background:#f8edc5;color:#17243f}
+.shapes{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.shape{border:1px solid #e0d6b7;background:#fffdf5;border-radius:8px;padding:9px 2px;font-size:20px;cursor:pointer}.shape.selected{border:2px solid #17243f;background:#f8edc5}
+label{font-size:12px;color:#756943;display:flex;justify-content:space-between;margin:10px 0 6px}input[type=range]{width:100%;accent-color:#17243f}
+.canvas-wrap{width:100%;display:flex;justify-content:center;align-items:center;background:#f8edc5;border-radius:12px;padding:10px;min-height:340px;border:1px dashed #d8cda8}
+canvas{display:block;width:min(100%,560px);aspect-ratio:auto;height:auto;max-height:70vh;image-rendering:pixelated;cursor:crosshair;touch-action:none;border:2px solid #d8cda8;border-radius:3px;background:#fffdf5}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:13px}.btn{border:1px solid #d8cda8;background:#f8edc5;color:#17243f;border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer}.btn.primary{background:#17243f;border-color:#17243f;color:#f8edc5}.btn:active{transform:translateY(1px)}.spacer{flex:1}
+.note{font-size:12px;color:#85764a;margin:12px 0 0;line-height:1.6}
+footer{text-align:center;color:#85764a;font-size:12px;padding:22px}
+@media(max-width:700px){header{height:58px}header small{display:none}main{margin:18px auto}.layout{grid-template-columns:1fr}.panel{order:2}.workspace{order:1}.canvas-wrap{min-height:0}.panel{padding:13px}.section{margin-top:10px;padding-top:12px}.patterns{grid-template-columns:repeat(4,1fr)}}
+</style></head>
+<body>
+<header><div class="logo"><span>▦</span> dotty studio</div><small>나만의 도트 패턴 만들기 ✦</small><button class="btn" id="downloadTop">↓ 저장</button></header>
+<main>
+<h1>나만의 패턴을 콕콕! ✿</h1><p class="intro">색을 고르고, 패턴을 선택하고, 마음껏 꾸며봐요.</p>
+<div class="layout">
+<aside class="panel">
+<div class="tabs"><button class="tab active" data-tab="bg">배경</button><button class="tab" data-tab="pattern">패턴</button><button class="tab" data-tab="stamp">도장</button></div>
+<div id="bgTools">
+<div class="section" style="border-top:0;padding-top:0;margin-top:0"><h3>배경 색상</h3><div class="colors" id="bgColors"></div><label>직접 고르기</label><input type="color" id="bgColor" value="#f8edc5"></div>
+<div class="section"><h3>배경 패턴</h3><div class="patterns" id="patterns">
+<button class="pattern selected" data-pattern="plain"><b>□</b>기본</button><button class="pattern" data-pattern="dots"><b>⠿</b>도트</button><button class="pattern" data-pattern="check"><b>▦</b>체크</button><button class="pattern" data-pattern="stripes"><b>▤</b>줄무늬</button><button class="pattern" data-pattern="hearts"><b>♥</b>하트</button><button class="pattern" data-pattern="stars"><b>✦</b>별</button>
+</div></div></div>
+<div id="patternTools" hidden>
+<div class="section" style="border-top:0;padding-top:0;margin-top:0"><h3>패턴 색상</h3><div class="colors" id="patternColors"></div><label>직접 색 고르기</label><input type="color" id="patternColor" value="#ffc4d8"><label>패턴 크기 <span id="sizeLabel">8칸</span></label><input type="range" id="patternSize" min="4" max="20" value="8"><label>패턴 방향 <span id="angleLabel">0°</span></label><input type="range" id="patternAngle" min="0" max="315" step="45" value="0"></div>
+<div class="section"><h3>도트 색상</h3><input type="color" id="drawColor" value="#75c5ed"><p class="note">캔버스의 칸을 누르거나 드래그해 색칠해요.</p></div>
+</div>
+<div id="stampTools" hidden>
+<div class="section" style="border-top:0;padding-top:0;margin-top:0"><h3>귀여운 도장</h3><div class="shapes"><button class="shape" data-stamp="♥">♥</button><button class="shape" data-stamp="★">★</button><button class="shape" data-stamp="✿">✿</button><button class="shape" data-stamp="☁">☁</button><button class="shape" data-stamp="♡">♡</button><button class="shape" data-stamp="✦">✦</button><button class="shape" data-stamp="☺">☺</button><button class="shape" data-stamp="●">●</button><button class="shape" data-stamp="☾">☾</button><button class="shape" data-stamp="☀">☀</button><button class="shape" data-stamp="❀">❀</button><button class="shape" data-stamp="♫">♫</button><button class="shape" data-stamp="♧">♧</button><button class="shape" data-stamp="◆">◆</button><button class="shape" data-stamp="🍓">🍓</button><button class="shape" data-stamp="🐱">🐱</button><button class="shape" data-stamp="🐰">🐰</button><button class="shape" data-stamp="🍒">🍒</button><button class="shape" data-stamp="🌷">🌷</button><button class="shape" data-stamp="🦋">🦋</button></div><label>도장 색상</label><input type="color" id="stampColor" value="#f46e9d"><p class="note">도장을 고른 다음 캔버스를 눌러 배치하세요.</p></div>
+</div>
+<div class="section"><h3>내 작품 보관함 ♡</h3>
+<div style="display:flex;gap:6px"><input id="projectName" type="text" maxlength="40" placeholder="작품 이름" style="min-width:0;width:100%;border:1px solid #cfe8f7;border-radius:9px;padding:9px;color:#385b78"><button class="btn primary" id="saveProject">저장</button></div>
+<div style="display:flex;gap:6px;margin-top:8px"><select id="savedProjects" style="min-width:0;flex:1;border:1px solid #cfe8f7;border-radius:9px;padding:9px;background:white;color:#385b78"><option value="">저장된 작품 선택</option></select><button class="btn" id="loadProject">불러오기</button></div>
+<button class="btn" id="deleteProject" style="width:100%;margin-top:7px">선택 작품 삭제</button>
+<p class="note" id="saveStatus" aria-live="polite">작품은 현재 브라우저에 저장돼요.</p>
+</div>
+<div class="section"><h3>도트 설정</h3><label>한 줄의 도트 수 <span id="gridLabel">24개</span></label><input type="range" id="gridSize" min="4" max="64" value="24">
+<label>도트 크기 <span id="dotSizeLabel">100%</span></label><input type="range" id="dotSize" min="40" max="140" value="100">
+<p class="note">도트 수를 줄이면 큰 도트 느낌, 늘리면 촘촘한 패턴이 돼요.</p>
+<button class="btn" style="width:100%;margin-top:9px" id="clear">↻ 처음부터</button></div>
+</aside>
+<section class="workspace">
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><label for="canvasFormat" style="margin:0">미리보기 크기</label><select id="canvasFormat" style="flex:1;min-width:150px;border:1px solid #cfe8f7;border-radius:9px;padding:10px;background:#fff;color:#385b78"><option value="phone">휴대폰 배경화면 · 9:16</option><option value="desktop">PC 배경화면 · 16:9</option><option value="tablet">태블릿 · 4:3</option><option value="square">정사각형 · 1:1</option><option value="wide">와이드 · 21:9</option></select></div>
+<div class="canvas-wrap"><canvas id="art" width="480" height="854" aria-label="도트 패턴 편집 캔버스"></canvas></div>
+<div class="toolbar"><button class="btn" id="undo">↶ 되돌리기</button><button class="btn" id="redo">↷ 다시 하기</button><span class="spacer"></span><button class="btn" id="gridToggle">▦ 격자 켜기</button><button class="btn primary" id="download">↓ PNG 다운로드</button></div>
+<p class="note">✧ 작품은 이 브라우저에서 편집해요. 다운로드하면 이미지 파일로 저장할 수 있어요.</p>
+</section>
+</div></main><footer>made with ♡ · dotty studio</footer>
+<script>
+const canvas=document.getElementById('art'),ctx=canvas.getContext('2d');
+const palette=['#17243f','#f8edc5','#ffffff','#fffafc','#fff5f8','#ffe4ec','#ffc4d8','#ff8fb1','#f46e9d','#e84d86','#ffdce8','#ffb8c9','#ffdabd','#ffb36b','#ff934f','#fff0a8','#f9d976','#f5c542','#fff6c7','#bdebd8','#78d9bd','#49bea2','#d8f5e8','#a6e8e3','#9bd9f0','#75c5ed','#b9dcff','#579fe0','#347bb9','#d8c4ff','#b59ae8','#e9d5ff','#c9e3a7','#8ebf79','#b58b69','#d6b8a6','#f4c2a1','#b9b9c9','#6c5b7b','#45405a','#222222','#ff6b6b','#ff9fba','#ffcf70','#b0d9ff','#d9f0a3','#c6a0e0','#f4a7d4','#a8dadc','#d0f4de','#fefae0','#e0fbfc'];
+let format='phone',rows=43,bg='#f8edc5',patColor='#ffc4d8',drawColor='#75c5ed',pattern='plain',patternAngle=0,n=24,showGrid=false,mode='bg',stamp='♥',stampColor='#f46e9d',pixels=[],stamps=[],undoStack=[],redoStack=[],painting=false;
+function blank(){return Array.from({length:rows},()=>Array(n).fill(null))}
+function saveState(){undoStack.push(JSON.stringify({pixels,stamps}));if(undoStack.length>60)undoStack.shift();redoStack=[]}
+function init(){pixels=blank();stamps=[];render()}
+function setFormat(value){format=value;const ratios={phone:[9,16],desktop:[16,9],tablet:[4,3],square:[1,1],wide:[21,9]};const [w,h]=ratios[value]||ratios.phone;canvas.width=480;canvas.height=Math.round(480*h/w);rows=Math.max(4,Math.round(n*h/w));pixels=Array.from({length:rows},(_,y)=>Array.from({length:n},(_,x)=>pixels[y]?.[x]??null));render()}
+function fillStampPattern(char){stamps=[];const step=Math.max(2,Math.round(n/(Number(document.getElementById('patternSize').value)||8)));for(let y=Math.floor(step/2);y<rows;y+=step){for(let x=Math.floor(step/2);x<n;x+=step){stamps.push({x,y,char,color:stampColor,scale:Math.max(.55,Math.min(1.5,(Number(document.getElementById('dotSize').value)||100)/100))})}}render()}
+function render(){
+let cell=canvas.width/n, cellY=canvas.height/rows;
+ctx.setTransform(1,0,0,1,0,0);
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+if(pattern!=='plain'){
+  let step=Number(document.getElementById('patternSize').value)*cell;
+  ctx.save();
+  ctx.translate(canvas.width/2,canvas.height/2);
+  ctx.rotate(patternAngle*Math.PI/180);
+  ctx.translate(-canvas.width/2,-canvas.height/2);
+  ctx.fillStyle=patColor;
+  for(let y=-canvas.height;y<canvas.height*2;y+=step){
+    for(let x=-canvas.width;x<canvas.width*2;x+=step){
+      let k=Math.floor(x/step)+Math.floor(y/step);
+      if(pattern==='dots'){
+        ctx.beginPath();ctx.arc(x+step/2,y+step/2,Math.max(2,step*.13),0,Math.PI*2);ctx.fill();
+      } else if(pattern==='check'&&k%2===0){
+        ctx.fillRect(x,y,step,step);
+      } else if(pattern==='stripes'&&Math.floor(x/step)%2===0){
+        ctx.fillRect(x,y,step,canvas.height*3);
+      } else if(pattern==='hearts'||pattern==='stars'){
+        ctx.font=`${step*.58}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(pattern==='hearts'?'♥':'✦',x+step/2,y+step/2);
+      }
+    }
+  }
+  ctx.restore();
+}
+for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(pixels[y][x]){
+  ctx.fillStyle=pixels[y][x];ctx.fillRect(x*cell,y*cell,cell,cell);
+}
+stamps.forEach(a=>{
+  ctx.fillStyle=a.color;ctx.font=`${cell*a.scale}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(a.char,(a.x+.5)*cell,(a.y+.5)*cellY);
+});
+if(showGrid){
+  ctx.strokeStyle='rgba(90,150,190,.23)';ctx.lineWidth=.6;
+  for(let i=0;i<=n;i++){
+    ctx.beginPath();ctx.moveTo(i*cell,0);ctx.lineTo(i*cell,canvas.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,i*cell);ctx.lineTo(canvas.width,i*cell);ctx.stroke();
+  }
+}
+}
+function makeColors(id,which){const el=document.getElementById(id);el.innerHTML='';palette.forEach(c=>{let b=document.createElement('button');b.className='swatch'+((which==='bg'?bg:patColor)===c?' selected':'');b.style.background=c;b.title=c;b.onclick=()=>{if(which==='bg'){bg=c;document.getElementById('bgColor').value=c}else{patColor=c}makeColors(id,which);render()};el.appendChild(b)})}
+makeColors('bgColors','bg');makeColors('patternColors','pattern');init();
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));mode=b.dataset.tab;document.getElementById('bgTools').hidden=mode!=='bg';document.getElementById('patternTools').hidden=mode!=='pattern';document.getElementById('stampTools').hidden=mode!=='stamp'});
+document.querySelectorAll('.pattern').forEach(b=>b.onclick=()=>{pattern=b.dataset.pattern;document.querySelectorAll('.pattern').forEach(x=>x.classList.toggle('selected',x===b));render()});
+document.querySelectorAll('[data-stamp]').forEach(b=>b.onclick=()=>{saveState();stamp=b.dataset.stamp;document.querySelectorAll('[data-stamp]').forEach(x=>x.classList.toggle('selected',x===b));mode='stamp';document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab==='stamp'));document.getElementById('bgTools').hidden=true;document.getElementById('patternTools').hidden=true;document.getElementById('stampTools').hidden=false;fillStampPattern(stamp)});
+document.getElementById('bgColor').oninput=e=>{bg=e.target.value;makeColors('bgColors','bg');render()};
+
+document.getElementById('drawColor').oninput=e=>drawColor=e.target.value;
+document.getElementById('stampColor').oninput=e=>{stampColor=e.target.value;if(mode==='stamp')fillStampPattern(stamp)};
+document.getElementById('patternSize').oninput=e=>{document.getElementById('sizeLabel').textContent=e.target.value+'칸';render()};
+document.getElementById('patternColor').oninput=e=>{patColor=e.target.value;makeColors('patternColors','pattern');render()};
+document.getElementById('patternAngle').oninput=e=>{patternAngle=+e.target.value;document.getElementById('angleLabel').textContent=patternAngle+'°';render()};
+document.getElementById('gridSize').oninput=e=>{n=+e.target.value;document.getElementById('gridLabel').textContent=n+'개';setFormat(format);init();if(mode==='stamp')fillStampPattern(stamp)};
+document.getElementById('dotSize').oninput=e=>{document.getElementById('dotSizeLabel').textContent=e.target.value+'%';if(mode==='stamp')fillStampPattern(stamp);else render()};
+function paint(e){let r=canvas.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/r.width*n),y=Math.floor((e.clientY-r.top)/r.height*rows);if(x<0||y<0||x>=n||y>=rows)return;
+if(mode==='stamp'){stamps.push({x,y,char:stamp,color:stampColor,scale:1.1})}else{pixels[y][x]=drawColor}render()}
+canvas.addEventListener('pointerdown',e=>{painting=true;saveState();canvas.setPointerCapture(e.pointerId);paint(e)});canvas.addEventListener('pointermove',e=>{if(painting&&mode!=='stamp')paint(e)});canvas.addEventListener('pointerup',()=>painting=false);canvas.addEventListener('pointercancel',()=>painting=false);
+document.getElementById('gridToggle').onclick=e=>{showGrid=!showGrid;e.target.textContent=showGrid?'▦ 격자 끄기':'▦ 격자 켜기';render()};
+document.getElementById('clear').onclick=()=>{saveState();init()};
+document.getElementById('undo').onclick=()=>{if(!undoStack.length)return;redoStack.push(JSON.stringify({pixels,stamps}));let a=JSON.parse(undoStack.pop());pixels=a.pixels;stamps=a.stamps;render()};
+document.getElementById('redo').onclick=()=>{if(!redoStack.length)return;undoStack.push(JSON.stringify({pixels,stamps}));let a=JSON.parse(redoStack.pop());pixels=a.pixels;stamps=a.stamps;render()};
+const STORAGE_KEY='dottyStudioProjects_v1';
+function getProjects(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}catch(e){return {}}}
+function refreshProjects(selectId=''){const sel=document.getElementById('savedProjects');const projects=getProjects();sel.innerHTML='<option value="">저장된 작품 선택</option>';Object.keys(projects).sort((a,b)=>projects[b].updated-projects[a].updated).forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=projects[id].name;sel.appendChild(o)});if(selectId)sel.value=selectId}
+function snapshot(){return {version:1,n,format,rows,bg,patColor,drawColor,pattern,patternAngle,showGrid,pixels,stamps,patternSize:+document.getElementById('patternSize').value,dotSize:+document.getElementById('dotSize').value}}
+document.getElementById('saveProject').onclick=()=>{const name=document.getElementById('projectName').value.trim();const status=document.getElementById('saveStatus');if(!name){status.textContent='먼저 작품 이름을 적어 주세요!';document.getElementById('projectName').focus();return}
+try{const projects=getProjects();const id='p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);projects[id]={name,updated:Date.now(),data:snapshot()};localStorage.setItem(STORAGE_KEY,JSON.stringify(projects));refreshProjects(id);status.textContent='♡ “'+name+'” 작품을 저장했어요!'}catch(e){status.textContent='저장 공간이 부족하거나 브라우저 저장이 차단됐어요.'}};
+document.getElementById('loadProject').onclick=()=>{const id=document.getElementById('savedProjects').value;const status=document.getElementById('saveStatus');const p=getProjects()[id];if(!p){status.textContent='불러올 작품을 먼저 선택해 주세요.';return}const d=p.data;if(!d||!Array.isArray(d.pixels)){status.textContent='이 작품 파일을 읽을 수 없어요.';return}
+saveState();n=Math.max(4,Math.min(64,Number(d.n)||24));format=d.format||'phone';document.getElementById('canvasFormat').value=format;bg=d.bg||'#fff5f8';patColor=d.patColor||'#ffc4d8';drawColor=d.drawColor||'#75c5ed';pattern=d.pattern||'plain';patternAngle=Number(d.patternAngle)||0;document.getElementById('patternAngle').value=patternAngle;document.getElementById('angleLabel').textContent=patternAngle+'°';document.getElementById('patternColor').value=patColor;showGrid=d.showGrid!==false;pixels=d.pixels;stamps=Array.isArray(d.stamps)?d.stamps:[];setFormat(format);if(Array.isArray(d.pixels))pixels=Array.from({length:rows},(_,y)=>Array.from({length:n},(_,x)=>d.pixels[y]?.[x]??null));document.getElementById('gridSize').value=n;document.getElementById('gridLabel').textContent=n+'개';document.getElementById('dotSize').value=d.dotSize||100;document.getElementById('dotSizeLabel').textContent=(d.dotSize||100)+'%';document.getElementById('bgColor').value=bg;document.getElementById('drawColor').value=drawColor;document.getElementById('patternSize').value=d.patternSize||8;document.getElementById('sizeLabel').textContent=(d.patternSize||8)+'칸';document.getElementById('gridToggle').textContent=showGrid?'▦ 격자 끄기':'▦ 격자 켜기';document.querySelectorAll('.pattern').forEach(b=>b.classList.toggle('selected',b.dataset.pattern===pattern));makeColors('bgColors','bg');makeColors('patternColors','pattern');render();status.textContent='“'+p.name+'” 작품을 불러왔어요!';};
+document.getElementById('deleteProject').onclick=()=>{const sel=document.getElementById('savedProjects');const id=sel.value;const status=document.getElementById('saveStatus');if(!id){status.textContent='삭제할 작품을 먼저 선택해 주세요.';return}const projects=getProjects();const name=projects[id]?.name||'작품';delete projects[id];try{localStorage.setItem(STORAGE_KEY,JSON.stringify(projects));refreshProjects();status.textContent='“'+name+'” 작품을 삭제했어요.'}catch(e){status.textContent='삭제하지 못했어요.'}};
+refreshProjects();
+function download(){let old=showGrid;showGrid=false;render();let a=document.createElement('a');a.download='my-dot-wallpaper.png';a.href=canvas.toDataURL('image/png');a.click();showGrid=old;render()}
+document.getElementById('download').onclick=download;document.getElementById('downloadTop').onclick=download;
+</script></body></html>
