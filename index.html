@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -203,6 +204,7 @@ select {
   border-radius: 10px;
 }
 
+/* 미리보기 위치 이동 기능 */
 .mini-preview {
   position: fixed;
   top: 12px;
@@ -215,6 +217,15 @@ select {
   border-radius: 13px;
   box-shadow: 0 3px 15px #62566B22;
   text-align: center;
+
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mini-preview:active {
+  cursor: grabbing;
 }
 
 .mini-preview.hidden { display: none; }
@@ -224,6 +235,7 @@ select {
   font-size: 11px;
   font-weight: bold;
   margin-bottom: 5px;
+  pointer-events: none;
 }
 
 #miniCanvas {
@@ -231,6 +243,7 @@ select {
   width: 100%;
   height: auto;
   border-radius: 5px;
+  pointer-events: none;
 }
 
 .works-panel { margin-top: 14px; }
@@ -1112,6 +1125,83 @@ if ("IntersectionObserver" in window) {
 
   observer.observe(mainPreview);
 }
+
+// 미리보기 칸 드래그 이동 기능
+let isDraggingMini = false;
+let miniOffsetX = 0;
+let miniOffsetY = 0;
+
+miniPreview.addEventListener("pointerdown", event => {
+  isDraggingMini = true;
+
+  const rect = miniPreview.getBoundingClientRect();
+
+  miniOffsetX = event.clientX - rect.left;
+  miniOffsetY = event.clientY - rect.top;
+
+  miniPreview.style.left = rect.left + "px";
+  miniPreview.style.top = rect.top + "px";
+  miniPreview.style.right = "auto";
+
+  miniPreview.setPointerCapture(event.pointerId);
+  event.preventDefault();
+});
+
+miniPreview.addEventListener("pointermove", event => {
+  if (!isDraggingMini) return;
+
+  const width = miniPreview.offsetWidth;
+  const height = miniPreview.offsetHeight;
+
+  let left = event.clientX - miniOffsetX;
+  let top = event.clientY - miniOffsetY;
+
+  left = Math.max(0, Math.min(
+    window.innerWidth - width,
+    left
+  ));
+
+  top = Math.max(0, Math.min(
+    window.innerHeight - height,
+    top
+  ));
+
+  miniPreview.style.left = left + "px";
+  miniPreview.style.top = top + "px";
+});
+
+function stopMiniDragging() {
+  isDraggingMini = false;
+}
+
+miniPreview.addEventListener(
+  "pointerup",
+  stopMiniDragging
+);
+
+miniPreview.addEventListener(
+  "pointercancel",
+  stopMiniDragging
+);
+
+// 화면 크기가 바뀌어도 미리보기 칸이 화면 안에 있도록 조정
+window.addEventListener("resize", () => {
+  if (miniPreview.style.left === "") return;
+
+  const rect = miniPreview.getBoundingClientRect();
+
+  miniPreview.style.left =
+    Math.max(0, Math.min(
+      window.innerWidth - miniPreview.offsetWidth,
+      rect.left
+    )) + "px";
+
+  miniPreview.style.top =
+    Math.max(0, Math.min(
+      window.innerHeight - miniPreview.offsetHeight,
+      rect.top
+    )) + "px";
+});
 
 // 공유하기
 document.getElementById("shareBtn").addEventListener(
