@@ -61,10 +61,26 @@
   .btns button:disabled{opacity:.35;cursor:default}
   #smsg,#bsum{min-height:1.2em;text-align:center;font-size:14px;color:var(--leaf)}
 
+  [hidden]{display:none!important}
+  .row.gray{opacity:.45;filter:grayscale(1)}
+  .slot .ic.gray{filter:grayscale(1);opacity:.55}
+  .stabs.wrap{flex-wrap:wrap}
+  .stabs.wrap button{flex:1 1 30%}
+  #dText{font-size:16px;line-height:1.5;min-height:3.4em;padding:4px 2px}
+  #dPerk{font-size:12px;opacity:.8}
+  .shead img{width:40px;height:40px;image-rendering:pixelated;background:#2f2013;border:2px solid var(--edge);border-radius:8px}
+  .hearts{margin-left:auto;color:#ff7a9a;font-size:15px}
+  #spmsg,#bamsg{min-height:1.2em;text-align:center;font-size:14px;color:var(--leaf)}
   #rotate{position:fixed;inset:0;background:#2b1d14;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:20;font-size:22px;text-align:center}
   #rotate span{font-size:60px}
   @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .cards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:6px}
+  .pick{background:#2f2013;border:3px solid var(--edge);border-radius:12px;padding:8px 22px;color:var(--text);font:inherit;font-size:18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .pick:hover,.pick:focus-visible{border-color:var(--gold)}
+  .pick.cur{border-color:var(--leaf)}
+  canvas.pv{position:static;width:96px;height:120px;image-rendering:pixelated}
+  #csnote{text-align:center;font-size:13px;opacity:.75}
 </style>
 </head>
 <body>
@@ -83,7 +99,7 @@
 <div id="shop" class="modal" hidden>
   <div class="card" role="dialog" aria-label="상점">
     <div class="shead"><span>🏪 상점</span><span class="gold">🪙 <b id="sGold">0</b></span><button class="x" id="sClose">닫기</button></div>
-    <div class="stabs"><button data-t="seed" class="on">씨앗</button><button data-t="tool">도구</button></div>
+    <div class="stabs"><button data-t="seed" class="on">씨앗</button><button data-t="tool">도구</button><button data-t="animal">동물</button></div>
     <div id="slist" class="grid"></div>
     <div id="smsg"></div>
   </div>
@@ -91,9 +107,46 @@
 
 <div id="bag" class="modal" hidden>
   <div class="card" role="dialog" aria-label="가방">
-    <div class="shead"><span>🎒 가방</span><span class="gold">🪙 <b id="bGold">0</b></span><button class="x" id="bClose">닫기</button></div>
+    <div class="shead"><span>🎒 가방</span><span class="gold">🪙 <b id="bGold">0</b></span><button class="x" id="bChar">캐릭터</button><button class="x" id="bClose">닫기</button></div>
     <div id="blist" class="grid"></div>
     <div id="bsum"></div>
+  </div>
+</div>
+
+<div id="seedpick" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="씨앗 고르기">
+    <div class="shead"><span>🌱 씨앗 고르기</span><button class="x" id="spClose" style="margin-left:auto">닫기</button></div>
+    <div id="splist" class="grid"></div>
+    <div id="spmsg"></div>
+  </div>
+</div>
+
+<div id="barn" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="축사">
+    <div class="shead"><span>🐄 축사</span><button class="x" id="baClose" style="margin-left:auto">닫기</button></div>
+    <div id="balist" class="grid"></div>
+    <div id="bamsg"></div>
+  </div>
+</div>
+
+<div id="dlg" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="대화">
+    <div class="shead"><img id="dImg" alt=""><span id="dName"></span><span class="hearts" id="dHeart"></span><button class="x" id="dClose">닫기</button></div>
+    <div id="dPerk"></div>
+    <div id="dText"></div>
+    <div id="dBtns" class="stabs wrap"></div>
+    <div id="dGift" class="grid" hidden></div>
+  </div>
+</div>
+
+<div id="charsel" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="캐릭터 선택">
+    <div class="shead"><span>🧑‍🌾 캐릭터를 골라요</span></div>
+    <div class="cards">
+      <button class="pick" data-g="female"><canvas class="pv" width="16" height="20"></canvas>여자</button>
+      <button class="pick" data-g="male"><canvas class="pv" width="16" height="20"></canvas>남자</button>
+    </div>
+    <div id="csnote">나중에 🎒 가방의 '캐릭터' 버튼에서 바꿀 수 있어요</div>
   </div>
 </div>
 
@@ -109,9 +162,9 @@
   let NOW = 0;
 
   // ================= 데이터 =================
-  const GRASS = 0, SOIL = 1, HOUSE = 2, BOX = 3, POND = 4, SHOP = 5, MOUNTAIN = 6, SEA = 7, SAND = 8, TREE = 9, CAVE = 10;
+  const GRASS = 0, SOIL = 1, HOUSE = 2, BOX = 3, POND = 4, SHOP = 5, MOUNTAIN = 6, SEA = 7, SAND = 8, TREE = 9, CAVE = 10, FENCE = 11, BARN = 12;
   const FLOOR = 20, WALLM = 21, ROCK = 22, COPPER = 23, IRON = 24, GOLD = 25, CRYSTAL = 26, LUP = 27, LDOWN = 28;
-  const SOLID = new Set([HOUSE, BOX, POND, SHOP, MOUNTAIN, SEA, TREE, CAVE, WALLM, ROCK, COPPER, IRON, GOLD, CRYSTAL, LUP, LDOWN]);
+  const SOLID = new Set([HOUSE, BOX, POND, SHOP, MOUNTAIN, SEA, TREE, CAVE, FENCE, BARN, WALLM, ROCK, COPPER, IRON, GOLD, CRYSTAL, LUP, LDOWN]);
   const DAY_START = 360, DAY_END = 1440, SEC_PER_DAY = 150;
 
   // 실제 현재 계절 (북반구 기준: 3~5 봄, 6~8 여름, 9~11 가을, 12~2 겨울)
@@ -120,14 +173,34 @@
   const ALL = ['spring', 'summer', 'autumn', 'winter'];
 
   const CROPS = {
-    carrot:  { name: '당근',   icon: '🥕', seed: 15, sell: 40,  days: 3, seasons: ['spring', 'autumn'] },
-    potato:  { name: '감자',   icon: '🥔', seed: 25, sell: 70,  days: 4, seasons: ['spring', 'autumn'] },
-    cabbage: { name: '배추',   icon: '🥬', seed: 30, sell: 90,  days: 4, seasons: ['spring', 'winter'] },
-    tomato:  { name: '토마토', icon: '🍅', seed: 40, sell: 120, days: 5, seasons: ['summer'] },
-    corn:    { name: '옥수수', icon: '🌽', seed: 50, sell: 150, days: 6, seasons: ['summer', 'autumn'] },
-    pumpkin: { name: '호박',   icon: '🎃', seed: 60, sell: 220, days: 7, seasons: ['autumn'] }
+    carrot:      { name: '당근',     icon: '🥕', seed: 15, sell: 40,  days: 3, seasons: ['spring', 'autumn'], shape: 'root',    col: ['#4aa84a', '#7bd66f', '#f08a24'] },
+    strawberry:  { name: '딸기',     icon: '🍓', seed: 30, sell: 85,  days: 4, seasons: ['spring', 'winter'], shape: 'berry',   col: ['#3f9a45', '#6fc96a', '#e0344a'] },
+    blueberry:   { name: '블루베리', icon: '🫐', seed: 40, sell: 115, days: 5, seasons: ['summer'],           shape: 'berry',   col: ['#3f8a45', '#6fb96a', '#4a5fd0'] },
+    apple:       { name: '사과',     icon: '🍎', seed: 70, sell: 210, days: 7, seasons: ['autumn'],           shape: 'tree',    col: ['#3f9a45', '#6fc96a', '#e0344a'] },
+    banana:      { name: '바나나',   icon: '🍌', seed: 65, sell: 195, days: 6, seasons: ['summer'],           shape: 'banana',  col: ['#4aa84a', '#7bd66f', '#ffd25e'] },
+    dragon:      { name: '용과',     icon: '🐉', seed: 75, sell: 230, days: 7, seasons: ['summer'],           shape: 'cactus',  col: ['#3f9a45', '#6fc96a', '#ff4f9a'] },
+    bamboo:      { name: '대나무',   icon: '🎋', seed: 20, sell: 60,  days: 3, seasons: ['spring', 'summer'], shape: 'bamboo',  col: ['#4aa84a', '#8fd16a', '#3f7a30'] },
+    coconut:     { name: '코코넛',   icon: '🥥', seed: 80, sell: 250, days: 8, seasons: ['summer'],           shape: 'palm',    col: ['#3f9a45', '#6fc96a', '#8a5a2e'] },
+    watermelon:  { name: '수박',     icon: '🍉', seed: 55, sell: 165, days: 6, seasons: ['summer'],           shape: 'melon',   col: ['#3f8a3a', '#69b45e', '#e0344a'] },
+    pumpkin:     { name: '호박',     icon: '🎃', seed: 60, sell: 220, days: 7, seasons: ['autumn'],           shape: 'pumpkin', col: ['#3f8a3a', '#69b45e', '#f08a24'] },
+    tomato:      { name: '토마토',   icon: '🍅', seed: 40, sell: 120, days: 5, seasons: ['summer'],           shape: 'bush',    col: ['#3f9a45', '#6fc96a', '#e04a3c'] },
+    potato:      { name: '감자',     icon: '🥔', seed: 25, sell: 70,  days: 4, seasons: ['spring', 'autumn'], shape: 'tuber',   col: ['#3f9a45', '#6fc96a', '#c9a06a'] },
+    cabbage:     { name: '배추',     icon: '🥬', seed: 30, sell: 90,  days: 4, seasons: ['spring', 'winter'], shape: 'head',    col: ['#5cae4a', '#8fd16a', '#c5ec9a'] },
+    corn:        { name: '옥수수',   icon: '🌽', seed: 50, sell: 150, days: 6, seasons: ['summer', 'autumn'], shape: 'stalk',   col: ['#4aa84a', '#7bd66f', '#ffd25e'] },
+    sweetpotato: { name: '고구마',   icon: '🍠', seed: 35, sell: 100, days: 5, seasons: ['autumn'],           shape: 'root',    col: ['#4aa84a', '#7bd66f', '#b04a7a'] },
+    grape:       { name: '포도',     icon: '🍇', seed: 70, sell: 205, days: 7, seasons: ['autumn'],           shape: 'grape',   col: ['#3f8a3a', '#69b45e', '#7a3fb0'] },
+    peach:       { name: '복숭아',   icon: '🍑', seed: 60, sell: 180, days: 6, seasons: ['summer'],           shape: 'tree',    col: ['#3f9a45', '#6fc96a', '#ff9fa0'] },
+    mandarin:    { name: '귤',       icon: '🍊', seed: 45, sell: 130, days: 5, seasons: ['winter'],           shape: 'tree',    col: ['#3f9a45', '#6fc96a', '#f08a24'] },
+    garlic:      { name: '마늘',     icon: '🧄', seed: 20, sell: 65,  days: 4, seasons: ['spring', 'winter'], shape: 'bulb',    col: ['#5cae4a', '#8fd16a', '#f2ecdc'] },
+    onion:       { name: '양파',     icon: '🧅', seed: 20, sell: 60,  days: 4, seasons: ['spring', 'winter'], shape: 'bulb',    col: ['#5cae4a', '#8fd16a', '#d9a860'] },
+    eggplant:    { name: '가지',     icon: '🍆', seed: 35, sell: 100, days: 5, seasons: ['summer', 'autumn'], shape: 'long',    col: ['#3f9a45', '#6fc96a', '#7a3fb0'] },
+    pepper:      { name: '고추',     icon: '🌶️', seed: 30, sell: 90,  days: 4, seasons: ['summer', 'autumn'], shape: 'long',    col: ['#3f9a45', '#6fc96a', '#e03a2a'] }
   };
   const CROP_KEYS = Object.keys(CROPS);
+  const canPlant = k => CROPS[k].seasons.includes(SEASON);
+  const byKo = (a, b) => CROPS[a].name.localeCompare(CROPS[b].name, 'ko');
+  // 지금 계절에 심을 수 있는 작물은 가나다순으로 앞에, 심을 수 없는 작물은 뒤에
+  const sortedCrops = () => [...CROP_KEYS.filter(canPlant).sort(byKo), ...CROP_KEYS.filter(k => !canPlant(k)).sort(byKo)];
   const FISH = [
     { id: 'crucian',  name: '붕어',   icon: '🐟', price: 30,  water: 'pond', seasons: ALL, w: 50, diff: 1 },
     { id: 'carp',     name: '잉어',   icon: '🐠', price: 60,  water: 'pond', seasons: ALL, w: 28, diff: 2 },
@@ -147,6 +220,49 @@
     crystal: { name: '수정', icon: '💎', price: 150 }
   };
   const ORE_OF = { [COPPER]: 'copper', [IRON]: 'iron', [GOLD]: 'gold', [CRYSTAL]: 'crystal' };
+  const GOODS = {
+    egg:  { name: '달걀', icon: '🥚', price: 35 },
+    milk: { name: '우유', icon: '🥛', price: 95 },
+    wool: { name: '양모', icon: '🧶', price: 150 }
+  };
+  const ANIMALS = {
+    chicken: { name: '닭', icon: '🐔', price: 150, good: 'egg',  days: 1, names: ['꼬꼬', '삐약이', '달걀이', '노랑이', '깜장이'] },
+    cow:     { name: '소', icon: '🐄', price: 600, good: 'milk', days: 1, names: ['얼룩이', '몽이', '초코', '우유'] },
+    sheep:   { name: '양', icon: '🐑', price: 400, good: 'wool', days: 2, names: ['구름이', '복실이', '뭉게', '하양이'] }
+  };
+  const MAX_ANIMALS = 8, FEED_PRICE = 8;
+  const NPCS = [
+    { id: 'sujin', name: '수진', role: '상점 주인', x: 16, y: 10, area: [13, 10, 19, 11],
+      hair: '#5a3a1c', shirt: '#3d7a4a', pants: '#4a4a6a', hat: null, bun: false,
+      love: ['c:strawberry', 'c:apple', 'g:egg'], like: ['c:carrot', 'c:tomato', 'f:carp'],
+      perk: '친밀도 ❤4부터 상점 모든 물건 10% 할인', perkAt: 4,
+      lines: ['어서 오세요! 오늘도 좋은 씨앗이 많아요.', '씨앗은 가나다순으로 정리해 뒀답니다.', '단골이 되어 주시면 할인도 해 드려요!'],
+      season: { spring: '봄이에요! 딸기와 당근 씨앗이 잘 나가요.', summer: '여름엔 수박이랑 토마토가 인기예요.', autumn: '가을엔 호박과 사과죠!', winter: '겨울엔 귤과 배추를 심어 보세요.' } },
+    { id: 'cheolsu', name: '철수', role: '광부', x: 27, y: 6, area: [25, 5, 29, 7],
+      hair: '#2a2a2a', shirt: '#c9a030', pants: '#5a4a3a', hat: '#ffd25e', bun: false,
+      love: ['o:gold', 'o:crystal'], like: ['o:iron', 'c:corn'],
+      perk: '친밀도 ❤4부터 광석을 가끔 하나 더 캐요', perkAt: 4,
+      lines: ['산속은 깊이 들어갈수록 귀한 광석이 나온다네.', '곡괭이질은 요령이야. 쾅! 하고 한 번에!', '어두운 광산에선 사다리를 잘 찾아야 해.'],
+      season: { spring: '봄이라 산에 눈 녹은 물이 흐르는군.', summer: '여름 광산은 시원해서 좋지.', autumn: '가을 산은 단풍이 예쁘더군.', winter: '겨울엔 광산 안이 오히려 포근해.' } },
+    { id: 'younghee', name: '영희', role: '어부', x: 27, y: 18, area: [25, 16, 28, 21],
+      hair: '#8a4a2a', shirt: '#4a80b8', pants: '#3a4a6a', hat: '#e8d8a0', bun: false,
+      love: ['f:tuna', 'f:seabream'], like: ['f:carp', 'f:mackerel', 'f:squid'],
+      perk: '친밀도 ❤4부터 입질 후 당길 시간이 늘어나요', perkAt: 4,
+      lines: ['낚시는 기다림이야. 느낌표가 뜨면 바로 당겨!', '바다에서는 큰 고기가 잡혀.', '연못에선 붕어랑 잉어가 잘 물어.'],
+      season: { spring: '봄엔 도미가 올라와요.', summer: '여름엔 오징어와 참치!', autumn: '가을엔 참치가 살이 올랐어요.', winter: '겨울엔 대구와 빙어가 제철이에요.' } },
+    { id: 'minsu', name: '민수', role: '목동', x: 26, y: 11, area: [24, 9, 27, 13],
+      hair: '#6a4a2a', shirt: '#b8423a', pants: '#4a5a8a', hat: '#8a5a2e', bun: false,
+      love: ['g:milk', 'g:wool'], like: ['g:egg', 'c:corn'],
+      perk: '친밀도 ❤4부터 하루 한 번 첫 대화에 사료 2개 선물', perkAt: 4,
+      lines: ['동물들은 매일 사료를 줘야 건강해요.', '쓰다듬어 주면 친해져요. 하트 5개면 두 배로 줘요!', '사료는 상점의 동물 탭에서 팔아요.'],
+      season: { spring: '봄 햇살에 닭들이 신났어요.', summer: '여름엔 더위에 지치지 않게 보살펴 주세요.', autumn: '가을엔 우유가 고소해요.', winter: '겨울엔 사료를 넉넉히 준비하세요.' } },
+    { id: 'halmoni', name: '할머니', role: '마을 어르신', x: 10, y: 11, area: [4, 10, 13, 12],
+      hair: '#d8d8d8', shirt: '#a05a8a', pants: '#6a5a6a', hat: null, bun: true,
+      love: ['c:pumpkin', 'c:sweetpotato'], like: ['c:potato', 'c:cabbage'],
+      perk: '매일 첫 대화에 제철 씨앗을 선물해 줘요', perkAt: 0,
+      lines: ['옛날엔 이 농장이 참 멋졌단다.', '손주 같구나, 이거 받아라.', '계절마다 심는 작물이 달라. 잊지 마라.'],
+      season: { spring: '꽃이 피니 마음도 설레는구나.', summer: '여름엔 수박이 최고지.', autumn: '가을은 수확의 계절이란다.', winter: '눈이 오네. 따뜻하게 입고 다니렴.' } }
+  ];
   const UPGRADES = [
     { id: 'hoe',    icon: '🌱', name: '튼튼한 호미',   desc: '한 번에 5×5칸을 갈아요',        price: 300 },
     { id: 'can',    icon: '💧', name: '큰 물뿌리개',   desc: '3×3칸에 한꺼번에 물을 줘요',     price: 400 },
@@ -177,12 +293,17 @@
     { t: HOUSE, x: 6,  y: 6, w: 6, h: 4 },
     { t: SHOP,  x: 14, y: 6, w: 5, h: 4 },
     { t: BOX,   x: 21, y: 8, w: 3, h: 2 },
-    { t: CAVE,  x: 26, y: 3, w: 3, h: 2 }
+    { t: CAVE,  x: 26, y: 3, w: 3, h: 2 },
+    { t: BARN,  x: 29, y: 6, w: 5, h: 4 }
   ];
   BUILDINGS.forEach(b => { for (let y = b.y; y < b.y + b.h; y++) for (let x = b.x; x < b.x + b.w; x++) farmMap[y][x] = b.t; });
-  for (let y = 15; y <= 19; y++) for (let x = 29; x <= 33; x++) farmMap[y][x] = POND;
+  const PEN = { x0: 29, y0: 10, x1: 33, y1: 13 };
+  for (let x = 28; x <= 34; x++) farmMap[14][x] = FENCE;
+  for (let y = 10; y <= 14; y++) { farmMap[y][28] = FENCE; farmMap[y][34] = FENCE; }
+  farmMap[14][31] = GRASS;
+  for (let y = 16; y <= 20; y++) for (let x = 29; x <= 33; x++) farmMap[y][x] = POND;
   for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
-    const farmZone = x >= 3 && x <= 28 && y >= 5 && y <= 24, pondZone = x >= 27 && x <= 35 && y >= 13 && y <= 21;
+    const farmZone = x >= 3 && x <= 28 && y >= 5 && y <= 24, pondZone = x >= 27 && x <= 36 && y >= 5 && y <= 22;
     if (farmMap[y][x] === GRASS && !farmZone && !pondZone && hsh(x, y, 3) % 10 === 0) farmMap[y][x] = TREE;
   }
   let map = farmMap, scene = 'farm', mineHp = {}, floorNo = 0;
@@ -191,13 +312,13 @@
   let s = {
     day: 1, time: DAY_START, gold: 60, tool: 0, px: 12, py: 11, face: [0, 1],
     seeds: Object.assign(mk(CROP_KEYS), { carrot: 5 }), harvest: mk(CROP_KEYS),
-    fish: mk(FISH.map(f => f.id)), ore: mk(Object.keys(ORES)),
-    seedSel: 'carrot', best: 0,
+    fish: mk(FISH.map(f => f.id)), ore: mk(Object.keys(ORES)), goods: mk(Object.keys(GOODS)),
+    seedSel: 'carrot', best: 0, feed: 0, animals: [], friend: {}, talked: {}, gifted: {},
     up: { hoe: false, can: false, boots: false, rod: false, pick: false, sickle: false }
   };
   let plants = {};
   let rx = s.px, ry = s.py;
-  const SAVE_KEY = 'small-farm-save-v4';
+  const SAVE_KEY = 'small-farm-save-v5';
   function save() {
     try {
       const sv = Object.assign({}, s);
@@ -205,12 +326,13 @@
       localStorage.setItem(SAVE_KEY, JSON.stringify({ s: sv, plants, map: farmMap }));
     } catch (e) {}
   }
+  let loaded = false;
   (function load() {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return;
       const d = JSON.parse(raw);
-      s = Object.assign(s, d.s); plants = d.plants || {};
+      s = Object.assign(s, d.s); plants = d.plants || {}; loaded = true;
       if (d.map && d.map.length === FH && d.map[0].length === FW) for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) farmMap[y][x] = d.map[y][x];
       rx = s.px; ry = s.py;
     } catch (e) {}
@@ -250,13 +372,32 @@
     '..hRRRRRHHHHHh..', '....WBWWWWWHh...', '....BBBBBBBBRR..', '....BBTBBBBTB...', '....bBBBBBBBb...'
   ];
   const SIDE_BOOTS = ['....OOO..OO.....', '....OO...OOO....', '....OOO..OO.....', '...OOO....OO....'];
-  const SPR = { down: [], up: [], left: [], right: [] };
-  for (let i = 0; i < 4; i++) {
-    SPR.down.push(sprite([...FRONT_HEAD, ...BODY, FRONT_BOOTS[i]]));
-    SPR.up.push(sprite([...BACK_HEAD, ...BODY, FRONT_BOOTS[i]]));
-    const l = sprite([...SIDE_ROWS, SIDE_BOOTS[i]]);
-    SPR.left.push(l); SPR.right.push(mirror(l));
+  // 주인공 도트 (여자: 직접 그려 준 그림을 도트로 옮긴 것 / 남자: 여자 모습을 참고해 만든 것) — 16×20
+  const CHAR_PAL = {"o": "#4a1c1c", "c": "#fbe0c4", "C": "#ecad97", "y": "#ffe39f", "Y": "#e0a93f", "H": "#834534", "h": "#5a2a22", "S": "#fef3ee", "s": "#f7b4b4", "K": "#5c1515", "W": "#fefefe", "w": "#dcd2d0", "B": "#6f88c0", "b": "#4b4d76", "T": "#803830", "O": "#b75a44", "N": "#7a3a2c", "R": "#c0392f", "p": "#f4cfc3"};
+  const CHAR_DATA = {"female":{"front":[".....ooooooyyyyy","...occCccCyyYYyy","..oyyyyyyyyyyyyy","occcCccCccCccCyy",".oCCCCCCCCCCCCyy","..hHHHHHHHHHHh..","..HHHHhHHhHyHH..","..HHHhHHHHhHHH..","..HHSKKSSKKSHH..","..HHssSKSKssHH..",".hHH.SSSKSS.HHh.",".H...yyyyyy...H.",".h.WWWWYYWWWW.h.",".H.WWBWWWWBWW.H.",".h.pBBBbbBBBp.h.",".R.pBTBBBBBBp.R.",".h.BBBBTBTBBB.h.","...bbbbbbbbbb..."],"back":[".....ooooooyyyyy","...occCccCyyYYyy","..oyyyyyyyyyyyyy","occcCccCccCccCyy",".oCCCCCCCCCCCCyy","..hHHHHHhHHHHh..","..HHHhHHHHHHHH..","..HHHHHHHHhHHH..","..HHHHhHHHHhHH..","..HHhHHHHhHHHH..",".hHHHHHHHHHHHHh.",".H..WWWWWWWW..H.",".h.WWWWWWWWWW.h.",".H.WWBWWWWBWW.H.",".h.pBBBBBBBBp.h.",".R.pBBTBBBBBp.R.",".h.BBBBBBTBBB.h.","...bbbbbbbbbb..."],"side":[".....ooooooyyyyy","...occCccCyyYYyy","..oyyyyyyyyyyyyy","occcCccCccCccCyy",".oCCCCCCCCCCCCyy","..hHHHHHHHHHHH..","..HHhyHhHHHHHH..","..HHHHHHHHHHHH..","..SKKSSSHHHHHH..","..KSsSSSHHHHHH..","..SSSSSSHHHHHH..","...yYyyyHHHHHH..",".....WWWWWWW.h..",".....WWWWWBW.H..",".....BpbBBBB.h..",".....BppBBBB.R..","....BBBBBBTBBh..","....bbbbbbbbb..."],"legsF":[[".....pp..pp.....","....OyO..OyO...."],["....pp....pp....","...OyO....OyO..."],[".....pp..pp.....","....OyO..OyO...."],["......pppp......",".....OyOOyO....."]],"legsS":[["......pppp......",".....yOOOO......"],["....pp...pp.....","...yOO..OOO....."],["......pppp......",".....yOOOO......"],["......ppp.......",".....OyOO......."]]},"male":{"front":[".....oooooo.....","...occCccCcyYy..","..oyyyyyyyyyyy..","occcCccCccCccCco",".oCCCCCCCCCCCCo.","..hHHHHHHHHHHh..","..HHHhHHhHhHHH..","..HHhHHhHHHhHH..","..HHSKKSSKKSHH..","..HHssSKSKssHH..",".....SSSKSS.....",".....yyyyyy.....","...WWWWYYWWWW...","...WWBWWWWBWW...","...pBBBbbBBBp...","...pBTBBbBBBp...","....BBBBbBBB....","....bbbbbbbb...."],"back":[".....oooooo.....","...occCccCcyYy..","..oyyyyyyyyyyy..","occcCccCccCccCco",".oCCCCCCCCCCCCo.","..hHHHHHhHHHHh..","..HHHhHHHHHHHH..","..HHHHHHHHhHHH..","..HHHHhHHHHHHH..","..HHHHHHHhHHHH..","..HHHHHHHHHHHH..","...WWWWWWWWWW...","...WWWWWWWWWW...","...WWBWWWWBWW...","...pBBBBBBBBp...","...pBBTBbBBBp...","....BBBBbBBB....","....bbbbbbbb...."],"side":[".....oooooo.....","...occCccCcyYy..","..oyyyyyyyyyyy..","occcCccCccCccCco",".oCCCCCCCCCCCCo.","..hHHHHHHHHHHH..","..HHhHHhHHHHHH..","..HHHHHHHHHHHH..","..SKKSSSHHHHH...","..KSsSSSHHHHH...","..SSSSSSHHHHH...","...yYyyy........",".....WWWWWWW....",".....WWWWWBW....",".....BppBBBB....",".....BppBBBB....",".....BBBBBbB....",".....bbbbbbb...."],"legsF":[[".....BB..BB.....","....OyO..OyO...."],["....BB....BB....","...OyO....OyO..."],[".....BB..BB.....","....OyO..OyO...."],["......BBBB......",".....OyOOyO....."]],"legsS":[["......BBBB......",".....yOOOO......"],["....BB...BB.....","...yOO..OOO....."],["......BBBB......",".....yOOOO......"],["......BBB.......",".....OyOO......."]]}};
+  function spriteC(rows) {
+    const c = document.createElement('canvas'); c.width = 16; c.height = rows.length;
+    const g = c.getContext('2d');
+    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (CHAR_PAL[ch]) { g.fillStyle = CHAR_PAL[ch]; g.fillRect(x, y, 1, 1); } }));
+    return c;
   }
+  function mirrorC(c) {
+    const m = document.createElement('canvas'); m.width = c.width; m.height = c.height;
+    const g = m.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0);
+    return m;
+  }
+  function charFrames(g) {
+    const d = CHAR_DATA[g], out = { down: [], up: [], left: [], right: [] };
+    for (let i = 0; i < 4; i++) {
+      out.down.push(spriteC([...d.front, ...d.legsF[i]]));
+      out.up.push(spriteC([...d.back, ...d.legsF[i]]));
+      const l = spriteC([...d.side, ...d.legsS[i]]);
+      out.left.push(l); out.right.push(mirrorC(l));
+    }
+    return out;
+  }
+  const SPR = { down: [], up: [], left: [], right: [] };
+  const buildChar = g => Object.assign(SPR, charFrames(g));
   const faceName = f => f[1] > 0 ? 'down' : f[1] < 0 ? 'up' : f[0] < 0 ? 'left' : 'right';
   const E = '................';
   const rep = (row, n) => Array(n).fill(row);
@@ -268,6 +409,51 @@
     can: sprite([...rep(E, 6), '....gggg....CC..', '....g..g...CC...', '...DDDDDDCC.....', '...CCCCCCCC.....', '...CCCCCCCC.....', '...cccccccc.....', ...rep(E, 4)]),
     pouch: sprite([...rep(E, 5), '.......pp.......', '......pppp......', '.....PPPPPP.....', '....PPPPPPPP....', '....PPPYPPPP....', '....PPPPPPPP....', '.....pppppp.....', ...rep(E, 4)])
   };
+
+  function spriteP(rows, pal) {
+    const c = document.createElement('canvas'); c.width = 16; c.height = 16;
+    const g = c.getContext('2d');
+    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); } }));
+    return c;
+  }
+  const mkS = fn => {
+    const c = document.createElement('canvas'); c.width = 16; c.height = 16; const g = c.getContext('2d');
+    fn((col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); });
+    return c;
+  };
+  const ANI_DRAW = {
+    chicken: (r, f) => {
+      r('#f6f6f2', 4, 8, 9, 5); r('#f6f6f2', 5, 7, 7, 1); r('#e4e4de', 5, 12, 7, 1); r('#f6f6f2', 12, 6, 2, 3); r('#dcdcd4', 13, 7, 1, 2);
+      r('#f6f6f2', 3, 5, 4, 4); r('#d93a2a', 4, 3, 2, 2); r('#f08a24', 1, 7, 2, 2); r('#2a2a2a', 4, 6, 1, 1); r('#d93a2a', 3, 9, 1, 1); r('#dcdcd4', 7, 9, 4, 3);
+      r('#f08a24', f ? 5 : 6, 13, 1, 2); r('#f08a24', f ? 10 : 9, 13, 1, 2);
+    },
+    cow: (r, f) => {
+      const o = f ? 1 : 0;
+      r('#f6f6f2', 3, 4, 11, 7); r('#3a3a3a', 5, 5, 3, 3); r('#3a3a3a', 10, 6, 3, 3);
+      r('#f6f6f2', 0, 5, 4, 5); r('#f6a0b0', 0, 8, 3, 2); r('#2a2a2a', 2, 6, 1, 1); r('#e8d8a0', 1, 3, 1, 2); r('#3a3a3a', 3, 5, 1, 2);
+      [4 + o, 7, 10 + o, 12].forEach(x => { r('#e8e8e2', x, 11, 2, 3); r('#3a3a3a', x, 14, 2, 1); });
+      r('#f6f6f2', 14, 5, 1, 4); r('#3a3a3a', 14, 9, 1, 1); r('#f6a0b0', 8, 11, 2, 1);
+    },
+    sheep: (r, f) => {
+      const o = f ? 1 : 0;
+      r('#f6f6f2', 3, 5, 10, 7); r('#e4e4de', 4, 6, 2, 2); r('#e4e4de', 9, 8, 2, 2); r('#f6f6f2', 4, 4, 8, 1); r('#f6f6f2', 2, 6, 1, 4); r('#f6f6f2', 13, 6, 1, 4);
+      r('#4a4a4a', 0, 6, 4, 4); r('#ffffff', 1, 7, 1, 1); r('#2a2a2a', 1, 7, 1, 1); r('#4a4a4a', 3, 5, 2, 1);
+      r('#4a4a4a', 5 + o, 12, 1, 3); r('#4a4a4a', 10 - o, 12, 1, 3);
+    }
+  };
+  const ANI_L = {}, ANI_R = {};
+  Object.keys(ANI_DRAW).forEach(k => { ANI_L[k] = [0, 1].map(f => mkS(r => ANI_DRAW[k](r, f))); ANI_R[k] = ANI_L[k].map(mirror); });
+  const NPC_T = [E, '.....hhhhhh.....', '....hhhhhhhh....', '....hhhhhhhh....', '....hssssssh....', '....hsKssKsh....', '....hssssssh....', '.....ssmmss.....',
+    '....tttttttt....', '...stttttttts...', '...stttttttts...', '....tttttttt....', '....pppppppp....', '....pppppppp....'];
+  const NPC_LEGS = [['....pp....pp....', '....bb....bb....'], ['...pp......pp...', '...bb......bb...']];
+  const NPC_SPR = {};
+  NPCS.forEach(n => {
+    const rows = NPC_T.slice();
+    if (n.hat) { rows[1] = '.....aaaaaa.....'; rows[2] = '....aaaaaaaa....'; rows[3] = '...aaaaaaaaaa...'; }
+    if (n.bun) rows[0] = '......hhhh......';
+    const pal = { h: n.hair, s: '#f7dcc8', K: '#3a2318', m: '#b04a4a', t: n.shirt, p: n.pants, b: '#4a3320', a: n.hat || '#000000' };
+    NPC_SPR[n.id] = NPC_LEGS.map(l => spriteP([...rows, ...l], pal));
+  });
 
   // ================= UI =================
   const toastEl = $('toast'); let toastT;
@@ -285,15 +471,18 @@
     $('hotbar').appendChild(b);
     return { b, ic: b.querySelector('.ic'), em: b.querySelector('em') };
   });
-  function nextSeed() {
-    const i = CROP_KEYS.indexOf(s.seedSel);
-    for (let j = 1; j <= CROP_KEYS.length; j++) { const k = CROP_KEYS[(i + j) % CROP_KEYS.length]; if (s.seeds[k] > 0) { s.seedSel = k; return true; } }
-    return false;
+  // 가진 씨앗 중 지금 심을 수 있는 것(가나다순)을 우선 선택
+  function ensureSeed() {
+    const owned = sortedCrops().filter(k => s.seeds[k] > 0);
+    if (!owned.length) return;
+    if (s.seeds[s.seedSel] > 0 && canPlant(s.seedSel)) return;
+    s.seedSel = owned.find(canPlant) || owned[0];
   }
   function selectTool(i) {
     if (locked() || fishing) return;
-    if (i === 2 && s.tool === 2) nextSeed();
+    if (i === 2 && s.tool === 2) { openSeedPick(); return; }
     s.tool = i;
+    if (i === 2) ensureSeed();
   }
   const lastText = {};
   function setText(id, v) { if (lastText[id] !== v) { lastText[id] = v; $(id).textContent = v; } }
@@ -304,11 +493,11 @@
     setText('hSeason', scene === 'mine' ? `⛏ 광산 B${floorNo}` : `${SN[SEASON][1]} ${SN[SEASON][0]}`);
     setText('hTime', String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'));
     setText('hGold', s.gold);
-    setText('hBag', sum(s.harvest) + sum(s.fish) + sum(s.ore));
+    setText('hBag', sum(s.harvest) + sum(s.fish) + sum(s.ore) + sum(s.goods));
     const c = CROPS[s.seedSel];
     slotEls.forEach((sl, i) => {
       sl.b.classList.toggle('sel', i === s.tool);
-      if (i === 2) { if (sl.ic._v !== c.icon) { sl.ic._v = c.icon; sl.ic.textContent = c.icon; } const n = String(s.seeds[s.seedSel]); if (sl.em._v !== n) { sl.em._v = n; sl.em.textContent = n; } }
+      if (i === 2) { if (sl.ic._v !== c.icon) { sl.ic._v = c.icon; sl.ic.textContent = c.icon; } const n = String(s.seeds[s.seedSel]); if (sl.em._v !== n) { sl.em._v = n; sl.em.textContent = n; } sl.ic.classList.toggle('gray', !canPlant(s.seedSel)); }
     });
   }
 
@@ -467,7 +656,7 @@
     const f = fishing, t = now - f.t0;
     if (f.state === 'cast') { if (t >= 650) { f.state = 'wait'; f.t0 = now; f.until = rnd(1500, 4500) * (s.up.rod ? .6 : 1); splashAt(f.tx, f.ty); } }
     else if (f.state === 'wait') { f.bobOff = Math.sin(now / 300) * .6; if (t >= f.until) { f.state = 'bite'; f.t0 = now; f.fish = pickFish(f.kind); splashAt(f.tx, f.ty); } }
-    else if (f.state === 'bite') { f.bobOff = Math.sin(now / 45) * 1.2 + 1; if (t >= (s.up.rod ? 1500 : 1000)) endFishing('물고기가 도망갔어요'); }
+    else if (f.state === 'bite') { f.bobOff = Math.sin(now / 45) * 1.2 + 1; if (t >= (s.up.rod ? 1500 : 1000) + (hearts('younghee') >= 4 ? 400 : 0)) endFishing('물고기가 도망갔어요'); }
     else if (f.state === 'reel') {
       f.cur += f.dir * f.speed * dt;
       if (f.cur > 100) { f.cur = 100; f.dir = -1; } else if (f.cur < 0) { f.cur = 0; f.dir = 1; }
@@ -541,7 +730,7 @@
     debrisAt(tx, ty);
     if (hp > 0) { mineHp[key] = hp; return; }
     delete mineHp[key]; map[ty][tx] = FLOOR;
-    const id = ORE_OF[t] || 'stone'; s.ore[id]++;
+    const id = ORE_OF[t] || 'stone'; s.ore[id]++; if (hearts('cheolsu') >= 4 && Math.random() < 0.25) s.ore[id]++;
     pop(`+1 ${ORES[id].icon}`, tx * T + 8, ty * T); if (ORE_OF[t]) sparkleAt(tx, ty);
     save();
   }
@@ -553,11 +742,183 @@
     if (u >= 1) fade = null;
   }
 
+  // ================= 동물 / NPC =================
+  const ANIM_R = [];
+  NPCS.forEach(n => { n.kind = 'npc'; n.dx = n.x; n.dy = n.y; n.wt = Math.random() * 3; n.face = [0, 1]; });
+  const hearts = id => Math.min(10, Math.floor((s.friend[id] || 0) / 20));
+  const P = p => Math.ceil(p * (hearts('sujin') >= 4 ? 0.9 : 1));
+  function entityAt(x, y) {
+    if (scene !== 'farm') return null;
+    for (const n of NPCS) if (n.x === x && n.y === y) return { npc: n };
+    for (const a of ANIM_R) if (a.x === x && a.y === y) return a;
+    return null;
+  }
+  const allEnts = () => [...NPCS, ...ANIM_R];
+  function wander(e, dt, area) {
+    e.wt -= dt; if (e.wt > 0) return;
+    e.wt = rnd(1.2, 4);
+    const d = [[1, 0], [-1, 0], [0, 1], [0, -1]][(Math.random() * 4) | 0], nx = e.x + d[0], ny = e.y + d[1];
+    e.face = d;
+    if (nx < area[0] || nx > area[2] || ny < area[1] || ny > area[3]) return;
+    const tl = map[ny][nx];
+    if (SOLID.has(tl) || tl === SOIL || (nx === s.px && ny === s.py) || entityAt(nx, ny)) return;
+    e.x = nx; e.y = ny;
+  }
+  function updateEntities(dt) {
+    if (scene !== 'farm') return;
+    if (!(shopOpen || bagOpen || xOpen)) {
+      NPCS.forEach(n => wander(n, dt, n.area));
+      ANIM_R.forEach(a => wander(a, dt, [PEN.x0, PEN.y0, PEN.x1, PEN.y1]));
+    }
+    const k = Math.min(1, dt * 8);
+    allEnts().forEach(e => { e.dx += (e.x - e.dx) * k; e.dy += (e.y - e.dy) * k; });
+  }
+  function freePenTile() {
+    const c = [];
+    for (let y = PEN.y0; y <= PEN.y1; y++) for (let x = PEN.x0; x <= PEN.x1; x++) {
+      if (!entityAt(x, y) && !(x === s.px && y === s.py) && !SOLID.has(farmMap[y][x])) c.push([x, y]);
+    }
+    return c.length ? c[(Math.random() * c.length) | 0] : null;
+  }
+  function addAnimalObj(d) {
+    const p = freePenTile(); if (!p) return false;
+    ANIM_R.push({ kind: 'animal', d, type: d.type, x: p[0], y: p[1], dx: p[0], dy: p[1], wt: rnd(0, 3), face: [-1, 0] });
+    return true;
+  }
+  function rebuildAnimals() { ANIM_R.length = 0; s.animals.forEach(addAnimalObj); }
+  function drawEnt(e, now) {
+    const X = Math.round(e.dx * T), Y = Math.round(e.dy * T);
+    const moving = Math.abs(e.x - e.dx) + Math.abs(e.y - e.dy) > 0.05, f = moving ? ((now / 140) | 0) % 2 : 0;
+    rect('rgba(0,0,0,.2)', X + 3, Y + 14, 10, 2);
+    if (e.kind === 'npc') {
+      ctx.drawImage(NPC_SPR[e.id][f], X, Y - (f ? 1 : 0));
+      const near = Math.abs(e.dx - rx) + Math.abs(e.dy - ry) < 3, fresh = s.talked[e.id] !== s.day;
+      if (near || fresh) {
+        ctx.font = 'bold 6px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineWidth = 2; ctx.strokeStyle = '#2b1d14'; ctx.fillStyle = '#fff';
+        const label = (fresh ? '! ' : '') + (near ? e.name : '');
+        ctx.strokeText(label, X + 8, Y - 1); ctx.fillText(label, X + 8, Y - 1);
+      }
+    } else {
+      ctx.drawImage((e.face[0] > 0 ? ANI_R : ANI_L)[e.type][f], X, Y - (f ? 1 : 0));
+      if (e.d.ready) {
+        rect('#2b1d14', X + 2, Y - 10, 12, 11); rect('#ffffff', X + 3, Y - 9, 10, 9);
+        ctx.font = '7px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000';
+        ctx.fillText(GOODS[ANIMALS[e.type].good].icon, X + 8, Y - 4);
+      }
+    }
+  }
+  function touchAnimal(a) {
+    const d = a.d, A = ANIMALS[a.type], px = a.x * T + 8, py = a.y * T;
+    if (d.ready) {
+      const n = d.hearts >= 5 ? 2 : 1; s.goods[A.good] += n; d.ready = false;
+      pop(`+${n} ${GOODS[A.good].icon}`, px, py); sparkleAt(a.x, a.y); say(`${d.name}이(가) ${GOODS[A.good].name}을(를) 줬어요!`); save(); return;
+    }
+    if (!d.pet) { d.pet = true; d.hearts = Math.min(5, d.hearts + 1); pop('❤', px, py); say(`${d.name}을(를) 쓰다듬었어요 ❤ ${d.hearts}/5`); save(); }
+    else say(`${d.name}이(가) 행복해 보여요 ❤`);
+  }
+  function animalsNight() {
+    let hungry = 0;
+    s.animals.forEach(a => {
+      a.pet = false;
+      if (s.feed > 0) {
+        s.feed--; a.fed = true; a.prog = (a.prog || 0) + 1;
+        if (a.prog >= ANIMALS[a.type].days && !a.ready) { a.ready = true; a.prog = 0; }
+      } else { a.fed = false; hungry++; }
+    });
+    return hungry;
+  }
+
+  // ---------- 창 열고 닫기 ----------
+  const XM = ['seedpick', 'barn', 'dlg', 'charsel'];
+  let dlgNpc = null;
+  function openX(id) { xOpen = true; XM.forEach(m => { $(m).hidden = m !== id; }); stickDir = null; held.clear(); }
+  function closeX() { if (!s.char) return; xOpen = false; dlgNpc = null; XM.forEach(m => { $(m).hidden = true; }); ensureSeed(); save(); }
+  function openSeedPick() {
+    openX('seedpick');
+    const list = $('splist'); list.innerHTML = '';
+    const owned = sortedCrops().filter(k => s.seeds[k] > 0);
+    $('spmsg').textContent = owned.length ? '지금 심을 수 있는 씨앗이 가나다순으로 먼저, 못 심는 씨앗은 회색으로 뒤에 나와요' : '가진 씨앗이 없어요. 상점에서 사 오세요';
+    owned.forEach(k => {
+      const c = CROPS[k], ok = canPlant(k);
+      row(list, c.icon, `${c.name} 씨앗 ×${s.seeds[k]}`,
+        ok ? `${c.days}일 후 수확 · 판매 ${c.sell}골드` : `지금은 못 심어요 · ${c.seasons.map(x => SN[x][0]).join('·')}에 심어요`,
+        [[k === s.seedSel ? '선택됨' : '선택', 0, () => { s.seedSel = k; closeX(); }, !ok || k === s.seedSel]], ok ? '' : 'gray');
+    });
+  }
+  function openBarn() {
+    openX('barn');
+    const list = $('balist'); list.innerHTML = '';
+    s.animals.forEach(d => {
+      const A = ANIMALS[d.type];
+      row(list, A.icon, `${d.name} (${A.name})`, `❤ ${d.hearts}/5 · ${d.fed ? '먹이 먹음' : '배고파요'} · ${d.ready ? GOODS[A.good].icon + ' 생산물이 있어요' : '생산 준비 중'}`, []);
+    });
+    $('bamsg').textContent = s.animals.length
+      ? `사료 ${s.feed}개 · 동물 ${s.animals.length}/${MAX_ANIMALS}마리 · 밤마다 동물 1마리당 사료 1개를 먹어요`
+      : '아직 동물이 없어요. 상점의 동물 탭에서 데려오세요!';
+  }
+
+  // ---------- NPC 대화 ----------
+  function itemList() {
+    const L = [];
+    CROP_KEYS.forEach(k => { if (s.harvest[k] > 0) L.push({ id: 'c:' + k, icon: CROPS[k].icon, name: CROPS[k].name, n: s.harvest[k], price: CROPS[k].sell }); });
+    FISH.forEach(f => { if (s.fish[f.id] > 0) L.push({ id: 'f:' + f.id, icon: f.icon, name: f.name, n: s.fish[f.id], price: f.price }); });
+    Object.keys(ORES).forEach(k => { if (s.ore[k] > 0) L.push({ id: 'o:' + k, icon: ORES[k].icon, name: ORES[k].name, n: s.ore[k], price: ORES[k].price }); });
+    Object.keys(GOODS).forEach(k => { if (s.goods[k] > 0) L.push({ id: 'g:' + k, icon: GOODS[k].icon, name: GOODS[k].name, n: s.goods[k], price: GOODS[k].price }); });
+    return L;
+  }
+  function takeItem(id) {
+    const [t, k] = id.split(':'), o = { c: s.harvest, f: s.fish, o: s.ore, g: s.goods }[t];
+    if (o && o[k] > 0) { o[k]--; return true; }
+    return false;
+  }
+  const pickLine = n => n.lines[(Math.random() * n.lines.length) | 0];
+  function openDialog(n) {
+    dlgNpc = n; openX('dlg'); $('dImg').src = NPC_SPR[n.id][0].toDataURL();
+    renderDlg(`${n.name}: ${Math.random() < 0.5 ? n.season[SEASON] : pickLine(n)}`, 'menu');
+  }
+  function renderDlg(text, mode) {
+    const n = dlgNpc, h = hearts(n.id);
+    $('dName').textContent = `${n.name} · ${n.role}`;
+    $('dHeart').textContent = `❤ ${h}/10`;
+    $('dPerk').textContent = (h >= n.perkAt ? '✅ ' : '🔒 ') + n.perk;
+    $('dText').textContent = text;
+    const btns = $('dBtns'), gift = $('dGift'); btns.innerHTML = ''; gift.innerHTML = ''; gift.hidden = mode !== 'gift';
+    const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; btns.appendChild(b); };
+    if (mode === 'menu') {
+      add('💬 대화하기', () => talk(n)); add('🎁 선물하기', () => renderDlg('무엇을 선물할까요?', 'gift'));
+      if (n.id === 'sujin') add('🏪 상점 열기', () => { closeX(); openShop(); });
+      add('닫기', closeX);
+    } else {
+      add('← 돌아가기', () => renderDlg(`${n.name}: ${pickLine(n)}`, 'menu'));
+      const L = itemList();
+      if (!L.length) gift.innerHTML = '<div class="row">선물할 물건이 없어요</div>';
+      L.forEach(it => row(gift, it.icon, `${it.name} ×${it.n}`, n.love.includes(it.id) ? '💖 아주 좋아해요' : n.like.includes(it.id) ? '👍 좋아해요' : `개당 ${it.price}골드`, [['선물', 0, () => giveGift(n, it)]]));
+    }
+  }
+  function talk(n) {
+    const first = s.talked[n.id] !== s.day; let extra = '';
+    if (first) {
+      s.talked[n.id] = s.day; s.friend[n.id] = Math.min(200, (s.friend[n.id] || 0) + 10);
+      if (n.id === 'halmoni') { const ks = CROP_KEYS.filter(canPlant), k = ks[(Math.random() * ks.length) | 0]; s.seeds[k]++; ensureSeed(); extra = ` (${CROPS[k].icon} ${CROPS[k].name} 씨앗을 받았어요!)`; }
+      if (n.id === 'minsu' && hearts('minsu') >= 4) { s.feed += 2; extra = ' (사료 2개를 받았어요!)'; }
+    }
+    const line = Math.random() < 0.5 ? n.season[SEASON] : pickLine(n);
+    renderDlg(`${n.name}: ${line}${extra}${first ? '' : ' (오늘 대화로 쌓이는 친밀도는 이미 받았어요)'}`, 'menu'); save();
+  }
+  function giveGift(n, it) {
+    if (s.gifted[n.id] === s.day) return renderDlg('오늘은 이미 선물을 받았어요. 내일 다시 주세요!', 'menu');
+    if (!takeItem(it.id)) return;
+    s.gifted[n.id] = s.day;
+    const love = n.love.includes(it.id), like = n.like.includes(it.id);
+    s.friend[n.id] = Math.min(200, (s.friend[n.id] || 0) + (love ? 60 : like ? 30 : 15));
+    renderDlg(love ? '와! 정말 좋아하는 거예요! 고마워요 ❤' : like ? '고마워요, 마음에 들어요!' : '선물이라니, 고마워요.', 'menu'); save();
+  }
+
   // ================= 게임 로직 =================
   const ripe = p => p.age >= CROPS[p.type].days;
   const stageOf = p => ripe(p) ? 3 : Math.min(2, Math.floor(p.age / CROPS[p.type].days * 3));
   const inb = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
-  const locked = () => !!(anim || shopOpen || bagOpen || fade);
+  const locked = () => !!(anim || shopOpen || bagOpen || xOpen || fade);
 
   function sleep(passedOut) {
     anim = null; fishing = null;
@@ -567,8 +928,9 @@
       if (p.watered && !ripe(p) && CROPS[p.type].seasons.includes(SEASON)) p.age++;
       p.watered = false;
     }
-    s.day++; s.time = DAY_START; save();
-    say(passedOut ? '너무 늦어서 쓰러졌어요… 새로운 아침!' : `${s.day}일차 아침이에요 ${SN[SEASON][1]}`);
+    const hungry = animalsNight();
+    s.day++; s.time = DAY_START; ensureSeed(); save();
+    say((passedOut ? '너무 늦어서 쓰러졌어요… 새로운 아침!' : `${s.day}일차 아침이에요 ${SN[SEASON][1]}`) + (hungry ? ` · 배고픈 동물 ${hungry}마리` : ''), 2600);
   }
   function countTillable() {
     const R = s.up.hoe ? 2 : 1; let n = 0;
@@ -588,7 +950,7 @@
   function plantAt(tx, ty, key, type) {
     if (!(s.seeds[type] > 0) || plants[key]) return;
     s.seeds[type]--; plants[key] = { type, age: 0, watered: false }; dustAt(tx, ty);
-    if (!s.seeds[type]) nextSeed();
+    ensureSeed();
     save();
   }
   function harvestOne(key, tx, ty) {
@@ -611,6 +973,7 @@
     CROP_KEYS.forEach(k => { total += s.harvest[k] * CROPS[k].sell; n += s.harvest[k]; s.harvest[k] = 0; });
     FISH.forEach(f => { total += s.fish[f.id] * f.price; n += s.fish[f.id]; s.fish[f.id] = 0; });
     Object.keys(ORES).forEach(k => { total += s.ore[k] * ORES[k].price; n += s.ore[k]; s.ore[k] = 0; });
+    Object.keys(GOODS).forEach(k => { total += s.goods[k] * GOODS[k].price; n += s.goods[k]; s.goods[k] = 0; });
     if (!n) return say('팔 물건이 없어요');
     s.gold += total; pop(`+${total}🪙`, s.px * T + 8, s.py * T - 6); say(`${n}개를 팔아 ${total}골드를 벌었어요!`); save();
   }
@@ -618,6 +981,7 @@
     if (tile === POND || tile === SEA) return '물이 시원해 보여요 🌊';
     if (tile === MOUNTAIN) return '높은 산이에요 ⛰️';
     if (tile === TREE) return '커다란 나무예요 🌳';
+    if (tile === FENCE) return '울타리예요. 아래쪽 문으로 들어가요 🪵';
     return '';
   }
   function actMine(tx, ty, tile) {
@@ -635,11 +999,14 @@
     if (!inb(tx, ty)) return;
     const tile = map[ty][tx];
     if (scene === 'mine') return actMine(tx, ty, tile);
+    const ent = entityAt(tx, ty);
+    if (ent) return ent.npc ? openDialog(ent.npc) : touchAnimal(ent);
     const key = tx + ',' + ty, p = plants[key], tool = s.tool;
 
     if (tile === HOUSE) return sleep(false);
     if (tile === BOX) return sellAll();
     if (tile === SHOP) return openShop();
+    if (tile === BARN) return openBarn();
     if (tile === CAVE) return transition(() => { switchScene('mine', 1); s.tool = 5; });
 
     if (tool === 3) {
@@ -672,10 +1039,10 @@
   }
 
   // ================= 상점 / 가방 =================
-  let shopOpen = false, bagOpen = false, shopTab = 'seed';
+  let shopOpen = false, bagOpen = false, xOpen = false, shopTab = 'seed';
   const shopEl = $('shop'), listEl = $('slist'), msgEl = $('smsg'), bagEl = $('bag');
-  function row(list, icon, name, desc, buttons) {
-    const r = document.createElement('div'); r.className = 'row';
+  function row(list, icon, name, desc, buttons, cls) {
+    const r = document.createElement('div'); r.className = 'row' + (cls ? ' ' + cls : '');
     r.innerHTML = `<div class="ico">${icon}</div><div class="info">${name}<small>${desc}</small></div><div class="btns"></div>`;
     const box = r.querySelector('.btns');
     buttons.forEach(([label, price, fn, off]) => {
@@ -685,32 +1052,53 @@
     list.appendChild(r);
   }
   function openShop() { shopOpen = true; shopTab = 'seed'; shopEl.hidden = false; msgEl.textContent = ''; stickDir = null; held.clear(); renderShop(); }
-  function closeShop() { shopOpen = false; shopEl.hidden = true; save(); }
+  function closeShop() { shopOpen = false; shopEl.hidden = true; ensureSeed(); save(); }
   function renderShop() {
     setText('sGold', s.gold);
-    document.querySelectorAll('.stabs button').forEach(b => b.classList.toggle('on', b.dataset.t === shopTab));
+    document.querySelectorAll('#shop .stabs button').forEach(b => b.classList.toggle('on', b.dataset.t === shopTab));
     listEl.innerHTML = '';
     if (shopTab === 'seed') {
-      CROP_KEYS.forEach(k => {
-        const c = CROPS[k], ok = c.seasons.includes(SEASON);
+      sortedCrops().forEach(k => {
+        const c = CROPS[k], ok = canPlant(k), pr = P(c.seed);
         row(listEl, c.icon, `${c.name} 씨앗${ok ? '' : ' (지금은 못 심어요)'}`,
-          `${c.seasons.map(x => SN[x][1]).join('')} · ${c.days}일 · 판매 ${c.sell}골드 · 보유 ${s.seeds[k]}개`,
-          [[`1개 ${c.seed}🪙`, c.seed, () => buySeed(k, 1)], [`5개 ${c.seed * 5}🪙`, c.seed * 5, () => buySeed(k, 5)]]);
+          `${c.seasons.map(x => SN[x][1] + SN[x][0]).join(' ')} · ${c.days}일 · 판매 ${c.sell}골드 · 보유 ${s.seeds[k]}개`,
+          ok ? [[`1개 ${pr}🪙`, pr, () => buySeed(k, 1)], [`5개 ${pr * 5}🪙`, pr * 5, () => buySeed(k, 5)]] : [['다음 계절에', 0, null, true]], ok ? '' : 'gray');
       });
+    } else if (shopTab === 'tool') {
+      UPGRADES.forEach(u => row(listEl, u.icon, u.name, u.desc, s.up[u.id] ? [['보유 중', 0, null, true]] : [[`${P(u.price)}🪙`, P(u.price), () => buyUp(u)]]));
     } else {
-      UPGRADES.forEach(u => row(listEl, u.icon, u.name, u.desc, s.up[u.id] ? [['보유 중', 0, null, true]] : [[`${u.price}🪙`, u.price, () => buyUp(u)]]));
+      Object.keys(ANIMALS).forEach(k => {
+        const A = ANIMALS[k], G = GOODS[A.good], pr = P(A.price);
+        row(listEl, A.icon, `${A.name} (${G.icon} ${G.name})`, `${A.days === 1 ? '매일' : A.days + '일마다'} ${G.name} · 판매 ${G.price}골드 · 현재 ${s.animals.length}/${MAX_ANIMALS}마리`, [[`${pr}🪙`, pr, () => buyAnimal(k)]]);
+      });
+      const fp = P(FEED_PRICE);
+      row(listEl, '🌾', '동물 사료', `밤마다 동물 1마리당 1개 · 보유 ${s.feed}개`, [[`1개 ${fp}🪙`, fp, () => buyFeed(1)], [`10개 ${fp * 10}🪙`, fp * 10, () => buyFeed(10)]]);
     }
   }
   function buySeed(k, n) {
-    const cost = CROPS[k].seed * n;
+    const cost = P(CROPS[k].seed) * n;
     if (s.gold < cost) return (msgEl.textContent = '골드가 부족해요');
-    s.gold -= cost; s.seeds[k] += n; if (!(s.seeds[s.seedSel] > 0)) s.seedSel = k;
+    s.gold -= cost; s.seeds[k] += n; ensureSeed();
     msgEl.textContent = `${CROPS[k].name} 씨앗 ${n}개를 샀어요`; save(); renderShop();
   }
   function buyUp(u) {
+    const cost = P(u.price);
     if (s.up[u.id]) return;
-    if (s.gold < u.price) return (msgEl.textContent = '골드가 부족해요');
-    s.gold -= u.price; s.up[u.id] = true; msgEl.textContent = `${u.name}을(를) 샀어요!`; save(); renderShop();
+    if (s.gold < cost) return (msgEl.textContent = '골드가 부족해요');
+    s.gold -= cost; s.up[u.id] = true; msgEl.textContent = `${u.name}을(를) 샀어요!`; save(); renderShop();
+  }
+  function buyAnimal(k) {
+    const A = ANIMALS[k], cost = P(A.price);
+    if (s.animals.length >= MAX_ANIMALS) return (msgEl.textContent = '축사가 가득 찼어요');
+    if (s.gold < cost) return (msgEl.textContent = '골드가 부족해요');
+    const d = { type: k, name: A.names[(Math.random() * A.names.length) | 0], hearts: 0, ready: false, prog: 0, pet: false, fed: false };
+    if (!addAnimalObj(d)) return (msgEl.textContent = '울타리 안에 자리가 없어요');
+    s.animals.push(d); s.gold -= cost; msgEl.textContent = `${d.name}(${A.name})이(가) 새 식구가 됐어요!`; save(); renderShop();
+  }
+  function buyFeed(n) {
+    const cost = P(FEED_PRICE) * n;
+    if (s.gold < cost) return (msgEl.textContent = '골드가 부족해요');
+    s.gold -= cost; s.feed += n; msgEl.textContent = `사료 ${n}개를 샀어요`; save(); renderShop();
   }
   function openBag() {
     if (locked() || fishing) return;
@@ -719,14 +1107,18 @@
     CROP_KEYS.forEach(k => { const c = CROPS[k]; if (s.harvest[k]) { n++; total += s.harvest[k] * c.sell; row(list, c.icon, `${c.name} ×${s.harvest[k]}`, `개당 ${c.sell}골드`, []); } });
     FISH.forEach(f => { if (s.fish[f.id]) { n++; total += s.fish[f.id] * f.price; row(list, f.icon, `${f.name} ×${s.fish[f.id]}`, `개당 ${f.price}골드`, []); } });
     Object.keys(ORES).forEach(k => { const o = ORES[k]; if (s.ore[k]) { n++; total += s.ore[k] * o.price; row(list, o.icon, `${o.name} ×${s.ore[k]}`, `개당 ${o.price}골드`, []); } });
-    CROP_KEYS.forEach(k => { if (s.seeds[k]) row(list, CROPS[k].icon, `${CROPS[k].name} 씨앗 ×${s.seeds[k]}`, CROPS[k].seasons.map(x => SN[x][0]).join('·') + ' 작물', []); });
+    Object.keys(GOODS).forEach(k => { const g = GOODS[k]; if (s.goods[k]) { n++; total += s.goods[k] * g.price; row(list, g.icon, `${g.name} ×${s.goods[k]}`, `개당 ${g.price}골드`, []); } });
+    if (s.feed) row(list, '🌾', `동물 사료 ×${s.feed}`, '밤마다 동물이 먹어요', []);
+    sortedCrops().forEach(k => { if (s.seeds[k]) row(list, CROPS[k].icon, `${CROPS[k].name} 씨앗 ×${s.seeds[k]}`, canPlant(k) ? '지금 심을 수 있어요' : CROPS[k].seasons.map(x => SN[x][0]).join('·') + '에 심어요', [], canPlant(k) ? '' : 'gray'); });
     $('bsum').textContent = n ? `상자에 팔면 약 ${total}골드 · 가장 깊이 간 광산 B${s.best || 0}` : `아직 팔 물건이 없어요 · 가장 깊이 간 광산 B${s.best || 0}`;
   }
   function closeBag() { bagOpen = false; bagEl.hidden = true; }
   $('sClose').onclick = closeShop; $('bClose').onclick = closeBag; $('bBag').onclick = () => (bagOpen ? closeBag() : openBag());
   shopEl.addEventListener('pointerdown', e => { if (e.target === shopEl) closeShop(); });
   bagEl.addEventListener('pointerdown', e => { if (e.target === bagEl) closeBag(); });
-  document.querySelectorAll('.stabs button').forEach(b => b.onclick = () => { shopTab = b.dataset.t; renderShop(); });
+  document.querySelectorAll('#shop .stabs button').forEach(b => b.onclick = () => { shopTab = b.dataset.t; renderShop(); });
+  XM.forEach(m => $(m).addEventListener('pointerdown', e => { if (e.target === $(m)) closeX(); }));
+  $('spClose').onclick = closeX; $('baClose').onclick = closeX; $('dClose').onclick = closeX;
   $('bFs').onclick = () => {
     const el = document.documentElement;
     if (document.fullscreenElement) { document.exitFullscreen && document.exitFullscreen(); return; }
@@ -741,6 +1133,7 @@
   addEventListener('keydown', e => {
     if (shopOpen) { if (e.key === 'Escape') closeShop(); return; }
     if (bagOpen) { if (e.key === 'Escape' || e.key === 'b') closeBag(); return; }
+    if (xOpen) { if (e.key === 'Escape') closeX(); return; }
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     if (keyMap[k]) { held.add(keyMap[k]); e.preventDefault(); }
     else if (k === ' ' || k === 'e') { if (!e.repeat) act(); e.preventDefault(); }
@@ -773,7 +1166,7 @@
     if (!d || now - lastMove < (s.up.boots ? 95 : 140)) return;
     s.face = d;
     const nx = s.px + d[0], ny = s.py + d[1];
-    if (inb(nx, ny) && !SOLID.has(map[ny][nx])) { s.px = nx; s.py = ny; }
+    if (inb(nx, ny) && !SOLID.has(map[ny][nx]) && !entityAt(nx, ny)) { s.px = nx; s.py = ny; }
     lastMove = now;
   }
 
@@ -892,7 +1285,7 @@
     rect('#7a4a24', X + 3, Y + 30, 3, h - 30); rect('#7a4a24', X + w - 6, Y + 30, 3, h - 30);
     rect('#3a2616', X + 8, Y + 30, w - 16, 16); rect('#7a4a24', X + 8, Y + 38, w - 16, 1);
     const gc = ['#e04a3c', '#ffd25e', '#6fd06a', '#5aa0c8']; for (let i = 0; i < 6; i++) { rect(gc[i % 4], X + 10 + i * 11, Y + 33, 6, 5); rect(gc[(i + 2) % 4], X + 10 + i * 11, Y + 41, 6, 4); }
-    rect('#c8362f', X + 36, Y + 31, 8, 3); rect('#f7dcc8', X + 37, Y + 34, 6, 5); rect('#3a2318', X + 38, Y + 36, 1, 1); rect('#3a2318', X + 41, Y + 36, 1, 1); rect('#3d7a4a', X + 35, Y + 39, 10, 7);
+    
     rect('#b97c42', X + 4, Y + 46, w - 8, h - 46); rect('#d6a064', X + 2, Y + 44, w - 4, 3); rect('#8f5c2d', X + 8, Y + 50, w - 16, 1); rect('#8f5c2d', X + 8, Y + 56, w - 16, 1);
     rect('#f08a24', X + 10, Y + 41, 5, 3); rect('#e04a3c', X + 58, Y + 41, 5, 3); rect('#6fd06a', X + 66, Y + 41, 5, 3);
     if (night) rect('rgba(255,220,120,.22)', X + 8, Y + 30, w - 16, 16);
@@ -916,35 +1309,98 @@
   }
 
   // ---------- 작물 ----------
-  const LEAF = {
-    carrot: ['#4aa84a', '#7bd66f', '#f08a24'], potato: ['#3f9a45', '#6fc96a', '#c9a06a'], cabbage: ['#5cae4a', '#8fd16a', '#c5ec9a'],
-    tomato: ['#3f9a45', '#6fc96a', '#e04a3c'], corn: ['#4aa84a', '#7bd66f', '#ffd25e'], pumpkin: ['#3f8a3a', '#69b45e', '#f08a24']
-  };
-  function drawCrop(type, stage, X, Y, t) {
-    const [lf, hi, fr] = LEAF[type];
-    if (stage === 0) { rect(lf, X + 7, Y + 9, 2, 4); rect(hi, X + 5, Y + 8, 2, 2); rect(hi, X + 9, Y + 8, 2, 2); }
-    else if (stage === 1) { rect(lf, X + 7, Y + 5, 2, 8); rect(hi, X + 4, Y + 6, 3, 2); rect(hi, X + 9, Y + 4, 3, 2); rect(hi, X + 4, Y + 9, 3, 2); rect(hi, X + 9, Y + 9, 3, 2); }
-    else if (stage === 2) { rect(lf, X + 4, Y + 3, 8, 7); rect(lf, X + 3, Y + 5, 10, 4); rect(hi, X + 5, Y + 4, 2, 2); rect(hi, X + 9, Y + 6, 2, 2); rect(fr, X + 7, Y + 10, 2, 2); }
-    else if (type === 'carrot') {
+  function drawFence(x, y) {
+    const X = x * T, Y = y * T, f = (a, b) => a >= 0 && b >= 0 && a < W && b < H && map[b][a] === FENCE;
+    rect('rgba(0,0,0,.15)', X + 4, Y + 13, 8, 2);
+    if (f(x - 1, y)) { rect('#b98448', X, Y + 6, 6, 2); rect('#b98448', X, Y + 10, 6, 2); }
+    if (f(x + 1, y)) { rect('#b98448', X + 10, Y + 6, 6, 2); rect('#b98448', X + 10, Y + 10, 6, 2); }
+    if (f(x, y - 1)) rect('#a8723f', X + 7, Y, 2, 3);
+    if (f(x, y + 1)) rect('#a8723f', X + 7, Y + 13, 2, 3);
+    rect('#7a4a24', X + 6, Y + 3, 4, 11); rect('#a8723f', X + 6, Y + 3, 4, 2);
+  }
+  function drawBarnBld(X, Y, w, h, night) {
+    rect('rgba(0,0,0,.18)', X + 2, Y + h - 2, w - 2, 4);
+    rect('#b8423a', X + 4, Y + 24, w - 8, h - 24);
+    for (let i = 10; i < w - 8; i += 8) rect('#a63a33', X + i, Y + 24, 1, h - 26);
+    rect('#f5f1e8', X + 4, Y + 24, w - 8, 2); rect('#f5f1e8', X + 4, Y + h - 3, w - 8, 3); rect('#f5f1e8', X + 4, Y + 24, 2, h - 24); rect('#f5f1e8', X + w - 6, Y + 24, 2, h - 24);
+    const dx = X + (w >> 1) - 13;
+    rect('#f5f1e8', dx - 2, Y + h - 34, 30, 34); rect('#8f2328', dx, Y + h - 32, 26, 32); rect('#a63a33', dx + 1, Y + h - 31, 11, 31); rect('#a63a33', dx + 14, Y + h - 31, 11, 31);
+    for (let i = 0; i < 11; i++) {
+      const yy = Y + h - 31 + Math.round(i * 30 / 10);
+      rect('#f5f1e8', dx + 1 + i, yy, 1, 1); rect('#f5f1e8', dx + 11 - i, yy, 1, 1); rect('#f5f1e8', dx + 14 + i, yy, 1, 1); rect('#f5f1e8', dx + 24 - i, yy, 1, 1);
+    }
+    for (let r = 0; r < 24; r++) {
+      const inset = Math.max(0, 22 - r), c = (r >> 2) % 2 ? '#6a6d79' : '#5d606c';
+      rect(c, X + inset, Y + 4 + r, w - 2 * inset, 1); rect('#8f929d', X + inset, Y + 4 + r, 2, 1); rect('#44465a', X + w - inset - 2, Y + 4 + r, 2, 1);
+      if (SEASON === 'winter' && r < 8) rect('#f4f8fb', X + inset + 2, Y + 4 + r, w - 2 * inset - 4, 1);
+    }
+    rect('#4a4d58', X, Y + 27, w, 2);
+    rect('#f5f1e8', X + 33, Y + 10, 14, 11); rect('#3a2616', X + 34, Y + 11, 12, 9); rect('#e6c35a', X + 35, Y + 15, 10, 5); rect('#c9a030', X + 37, Y + 16, 2, 1); rect('#c9a030', X + 41, Y + 17, 2, 1);
+    rect('#4a4d58', X + 39, Y, 2, 5); rect('#4a4d58', X + 36, Y + 1, 8, 1);
+    if (night) rect('rgba(255,220,120,.2)', X + 34, Y + 11, 12, 9);
+  }
+
+  const HL = 'rgba(255,255,255,.4)';
+  function drawRipe(shape, lf, hi, fr, X, Y) {
+    if (shape === 'root') {
       rect(lf, X + 5, Y + 2, 2, 5); rect(lf, X + 7, Y + 1, 2, 6); rect(lf, X + 9, Y + 2, 2, 5);
-      rect(fr, X + 4, Y + 7, 8, 2); rect(fr, X + 5, Y + 9, 6, 2); rect(fr, X + 6, Y + 11, 4, 2); rect(fr, X + 7, Y + 13, 2, 1); rect('#ffb35a', X + 5, Y + 7, 2, 1);
-    } else if (type === 'potato') {
+      rect(fr, X + 4, Y + 7, 8, 2); rect(fr, X + 5, Y + 9, 6, 2); rect(fr, X + 6, Y + 11, 4, 2); rect(fr, X + 7, Y + 13, 2, 1); rect(HL, X + 5, Y + 7, 2, 1);
+    } else if (shape === 'bulb') {
+      rect(lf, X + 6, Y + 2, 1, 6); rect(lf, X + 8, Y + 1, 1, 7); rect(lf, X + 10, Y + 3, 1, 5);
+      rect(fr, X + 5, Y + 7, 6, 1); rect(fr, X + 4, Y + 8, 8, 5); rect(fr, X + 5, Y + 13, 6, 1); rect(HL, X + 5, Y + 8, 2, 2); rect('#e8e0c8', X + 7, Y + 14, 2, 1);
+    } else if (shape === 'tuber') {
       rect(lf, X + 4, Y + 2, 8, 6); rect(lf, X + 3, Y + 4, 10, 4); rect(hi, X + 5, Y + 3, 2, 2);
       rect(fr, X + 2, Y + 9, 6, 5); rect(fr, X + 8, Y + 10, 6, 4); rect('#a8804a', X + 4, Y + 11, 1, 1); rect('#a8804a', X + 10, Y + 12, 1, 1); rect('#e2c08a', X + 3, Y + 9, 2, 1);
-    } else if (type === 'cabbage') {
-      rect(lf, X + 2, Y + 6, 12, 8); rect('#8fd16a', X + 3, Y + 5, 10, 8); rect(fr, X + 5, Y + 6, 3, 2); rect('#6fbf58', X + 8, Y + 7, 1, 6); rect('#6fbf58', X + 4, Y + 11, 8, 1);
-    } else if (type === 'tomato') {
+    } else if (shape === 'berry') {
+      rect(lf, X + 4, Y + 5, 8, 2); rect(lf, X + 3, Y + 6, 10, 7); rect(hi, X + 4, Y + 6, 3, 2);
+      [[4, 9], [8, 8], [10, 10], [6, 11], [11, 7]].forEach(([a, b]) => { rect(fr, X + a, Y + b, 2, 2); rect(HL, X + a, Y + b, 1, 1); });
+    } else if (shape === 'bush') {
       rect(lf, X + 3, Y + 1, 10, 10); rect(hi, X + 4, Y + 2, 3, 2);
       rect(fr, X + 4, Y + 5, 3, 3); rect(fr, X + 9, Y + 4, 3, 3); rect(fr, X + 6, Y + 9, 3, 3);
       rect('#ffffff', X + 4, Y + 5, 1, 1); rect('#ffffff', X + 9, Y + 4, 1, 1); rect('#ffffff', X + 6, Y + 9, 1, 1); rect('#2f7a3a', X + 7, Y + 12, 2, 2);
-    } else if (type === 'corn') {
+    } else if (shape === 'long') {
+      rect(lf, X + 3, Y + 2, 10, 8); rect(hi, X + 4, Y + 3, 3, 2);
+      rect(fr, X + 4, Y + 9, 2, 5); rect(fr, X + 8, Y + 9, 2, 6); rect(fr, X + 11, Y + 8, 2, 5);
+      rect('#2f7a3a', X + 4, Y + 8, 2, 1); rect('#2f7a3a', X + 8, Y + 8, 2, 1); rect('#2f7a3a', X + 11, Y + 7, 2, 1); rect(HL, X + 4, Y + 10, 1, 2);
+    } else if (shape === 'tree') {
+      rect('#6b4a2b', X + 7, Y + 8, 2, 7); rect(lf, X + 3, Y + 1, 10, 1); rect(lf, X + 2, Y + 2, 12, 8); rect(hi, X + 4, Y + 3, 3, 2);
+      [[4, 5], [9, 4], [7, 7], [11, 7]].forEach(([a, b]) => { rect(fr, X + a, Y + b, 2, 2); rect(HL, X + a, Y + b, 1, 1); });
+    } else if (shape === 'banana') {
+      rect('#7bb060', X + 7, Y + 3, 2, 11); rect(lf, X + 2, Y + 2, 5, 2); rect(lf, X + 9, Y + 2, 5, 2); rect(hi, X + 1, Y + 4, 4, 1); rect(hi, X + 11, Y + 4, 4, 1);
+      rect('#6a4a2a', X + 9, Y + 6, 2, 1); rect(fr, X + 9, Y + 7, 3, 6); rect(fr, X + 11, Y + 8, 2, 5); rect('#c9a030', X + 9, Y + 12, 4, 1);
+    } else if (shape === 'cactus') {
+      rect(lf, X + 6, Y + 2, 4, 12); rect(lf, X + 3, Y + 6, 3, 2); rect(lf, X + 3, Y + 4, 2, 3); rect(lf, X + 10, Y + 7, 3, 2); rect(lf, X + 11, Y + 5, 2, 3);
+      rect(hi, X + 7, Y + 4, 1, 8); rect(fr, X + 4, Y + 2, 3, 3); rect(fr, X + 11, Y + 3, 3, 3); rect('#ffffff', X + 5, Y + 3, 1, 1); rect('#ffffff', X + 12, Y + 4, 1, 1);
+    } else if (shape === 'bamboo') {
+      rect(lf, X + 4, Y, 3, 15); rect(lf, X + 9, Y + 1, 3, 14); rect(hi, X + 4, Y, 1, 15); rect(hi, X + 9, Y + 1, 1, 14);
+      [3, 7, 11].forEach(b => { rect(fr, X + 4, Y + b, 3, 1); rect(fr, X + 9, Y + b + 1, 3, 1); }); rect(hi, X + 7, Y + 3, 3, 1); rect(hi, X + 2, Y + 6, 2, 1);
+    } else if (shape === 'palm') {
+      rect('#8a5a2e', X + 7, Y + 5, 2, 10); rect('#6b4420', X + 7, Y + 8, 2, 1); rect('#6b4420', X + 7, Y + 11, 2, 1);
+      rect(lf, X + 4, Y + 1, 8, 2); rect(lf, X + 2, Y + 3, 5, 2); rect(lf, X + 9, Y + 3, 5, 2); rect(lf, X + 1, Y + 5, 3, 1); rect(lf, X + 12, Y + 5, 3, 1);
+      rect(fr, X + 6, Y + 5, 2, 2); rect(fr, X + 8, Y + 5, 2, 2); rect('#c8b89a', X + 7, Y + 6, 2, 1);
+    } else if (shape === 'melon') {
+      rect(hi, X + 1, Y + 8, 3, 2); rect(hi, X + 12, Y + 9, 3, 2);
+      rect('#2f6a2f', X + 3, Y + 5, 10, 9); rect('#4fa04a', X + 4, Y + 6, 8, 7); rect('#2f6a2f', X + 6, Y + 5, 1, 9); rect('#2f6a2f', X + 9, Y + 5, 1, 9); rect(HL, X + 5, Y + 6, 2, 1); rect('#3f7a30', X + 7, Y + 3, 2, 2);
+    } else if (shape === 'pumpkin') {
+      rect(lf, X + 1, Y + 7, 4, 3); rect(lf, X + 11, Y + 7, 4, 3);
+      rect('#c96a14', X + 3, Y + 5, 10, 10); rect(fr, X + 4, Y + 4, 8, 10); rect('#c96a14', X + 6, Y + 5, 1, 9); rect('#c96a14', X + 9, Y + 5, 1, 9); rect('#ffb35a', X + 5, Y + 6, 1, 3); rect('#3f7a30', X + 7, Y + 2, 2, 3);
+    } else if (shape === 'stalk') {
       rect(lf, X + 7, Y + 1, 2, 13); rect(hi, X + 3, Y + 5, 4, 1); rect(hi, X + 9, Y + 8, 4, 1); rect(hi, X + 4, Y + 11, 3, 1);
       rect('#7bd66f', X + 9, Y + 3, 3, 6); rect(fr, X + 10, Y + 4, 1, 4); rect('#7bd66f', X + 4, Y + 6, 3, 5); rect(fr, X + 5, Y + 7, 1, 3);
-    } else {
-      rect(lf, X + 1, Y + 7, 4, 3); rect(lf, X + 11, Y + 7, 4, 3);
-      rect('#c96a14', X + 3, Y + 5, 10, 10); rect(fr, X + 4, Y + 4, 8, 10);
-      rect('#c96a14', X + 6, Y + 5, 1, 9); rect('#c96a14', X + 9, Y + 5, 1, 9); rect('#ffb35a', X + 5, Y + 6, 1, 3); rect('#3f7a30', X + 7, Y + 2, 2, 3);
+    } else if (shape === 'head') {
+      rect(lf, X + 2, Y + 6, 12, 8); rect('#8fd16a', X + 3, Y + 5, 10, 8); rect(fr, X + 5, Y + 6, 3, 2); rect('#6fbf58', X + 8, Y + 7, 1, 6); rect('#6fbf58', X + 4, Y + 11, 8, 1);
+    } else { // grape
+      rect(lf, X + 3, Y + 1, 10, 5); rect(hi, X + 4, Y + 2, 3, 2);
+      rect(fr, X + 4, Y + 6, 3, 2); rect(fr, X + 3, Y + 8, 5, 2); rect(fr, X + 4, Y + 10, 3, 2); rect(fr, X + 5, Y + 12, 1, 1);
+      rect(fr, X + 9, Y + 6, 3, 2); rect(fr, X + 8, Y + 8, 5, 2); rect(fr, X + 9, Y + 10, 3, 2); rect(HL, X + 4, Y + 8, 1, 1); rect(HL, X + 9, Y + 8, 1, 1);
     }
+  }
+  function drawCrop(type, stage, X, Y, t) {
+    const c = CROPS[type], lf = c.col[0], hi = c.col[1], fr = c.col[2];
+    if (stage === 0) { rect(lf, X + 7, Y + 9, 2, 4); rect(hi, X + 5, Y + 8, 2, 2); rect(hi, X + 9, Y + 8, 2, 2); }
+    else if (stage === 1) { rect(lf, X + 7, Y + 5, 2, 8); rect(hi, X + 4, Y + 6, 3, 2); rect(hi, X + 9, Y + 4, 3, 2); rect(hi, X + 4, Y + 9, 3, 2); rect(hi, X + 9, Y + 9, 3, 2); }
+    else if (stage === 2) { rect(lf, X + 4, Y + 3, 8, 7); rect(lf, X + 3, Y + 5, 10, 4); rect(hi, X + 5, Y + 4, 2, 2); rect(hi, X + 9, Y + 6, 2, 2); rect(fr, X + 7, Y + 10, 2, 2); }
+    else drawRipe(c.shape, lf, hi, fr, X, Y);
     if (stage === 3 && t % 2) rect('#ffffff', X + 13, Y + 2, 1, 1);
   }
 
@@ -997,13 +1453,13 @@
         else if (tl === SOIL) drawSoil(x, y);
         else if (tl === SAND) drawSand(x, y);
         else if (tl === MOUNTAIN || tl === CAVE) drawMountain(x, y);
-        else { drawGrass(x, y); if (tl === TREE) drawTree(x, y); }
+        else { drawGrass(x, y); if (tl === TREE) drawTree(x, y); else if (tl === FENCE) drawFence(x, y); }
       }
       for (const b of BUILDINGS) {
         const X = b.x * T, Y = b.y * T, w = b.w * T, h = b.h * T;
         if (X > camX + vw || X + w < camX || Y > camY + vh || Y + h < camY) continue;
         if (b.t === HOUSE) drawHouse(X, Y, w, h, night); else if (b.t === SHOP) drawShopBld(X, Y, w, h, night);
-        else if (b.t === BOX) drawBoxBld(X, Y, w, h); else drawCaveBld(X, Y, w, h);
+        else if (b.t === BOX) drawBoxBld(X, Y, w, h); else if (b.t === BARN) drawBarnBld(X, Y, w, h, night); else drawCaveBld(X, Y, w, h);
       }
       for (const k in plants) {
         const [x, y] = k.split(',').map(Number);
@@ -1011,6 +1467,8 @@
       }
     }
 
+    const ents = scene === 'farm' ? allEnts() : [];
+    ents.filter(e => e.dy <= ry).forEach(e => drawEnt(e, now));
     const moving = Math.abs(s.px - rx) + Math.abs(s.py - ry) > 0.05;
     const fi = moving ? Math.floor(now / 120) % 4 : 0, bob = moving && fi % 2 ? 1 : 0;
     const PX = Math.round(rx * T), PY = Math.round(ry * T);
@@ -1019,9 +1477,10 @@
     rect('rgba(0,0,0,.22)', PX + 4, PY + 14, 8, 2);
     if (anim && dir === 'up') drawTool(now, PX, PY, dy);
     if (fishing && dir === 'up') drawFishing(now, PX, PY);
-    ctx.drawImage(SPR[dir][fi], PX, PY - bob + dy);
+    const frm = SPR[dir][fi]; ctx.drawImage(frm, PX + 8 - (frm.width >> 1), PY + 16 - frm.height - bob + dy);
     if (anim && dir !== 'up') drawTool(now, PX, PY, dy);
     if (fishing && dir !== 'up') drawFishing(now, PX, PY);
+    ents.filter(e => e.dy > ry).forEach(e => drawEnt(e, now));
     drawParts();
     ctx.restore();
 
@@ -1048,11 +1507,26 @@
   }
   addEventListener('resize', resize); resize();
 
+  // 저장 데이터 보정 + 시작 설정
+  s.seeds = Object.assign(mk(CROP_KEYS), s.seeds); s.harvest = Object.assign(mk(CROP_KEYS), s.harvest);
+  s.goods = Object.assign(mk(Object.keys(GOODS)), s.goods);
+  s.animals = s.animals || []; s.friend = s.friend || {}; s.talked = s.talked || {}; s.gifted = s.gifted || {}; s.feed = s.feed || 0;
+  if (!loaded) { const k0 = sortedCrops().find(canPlant); s.seeds = mk(CROP_KEYS); s.seeds[k0] = 5; s.seedSel = k0; }
+  ensureSeed(); rebuildAnimals();
+  buildChar(s.char || 'female');
+  document.querySelectorAll('#charsel .pick').forEach(b => {
+    const g = b.dataset.g;
+    b.querySelector('canvas').getContext('2d').drawImage(charFrames(g).down[0], 0, 0);
+    b.onclick = () => { s.char = g; buildChar(g); closeX(); say(g === 'male' ? '남자 캐릭터로 바꿨어요!' : '여자 캐릭터로 바꿨어요!'); };
+  });
+  $('bChar').onclick = () => { closeBag(); openX('charsel'); };
+  if (!s.char) openX('charsel');
+
   let prev = 0;
   function loop(now) {
     NOW = now; const dt = Math.min(0.1, (now - prev) / 1000); prev = now;
-    if (!shopOpen && !bagOpen) { s.time += dt * (DAY_END - DAY_START) / SEC_PER_DAY; if (s.time >= DAY_END) sleep(true); }
-    updateFade(now); updateAnim(now); updateFishing(now, dt); tryMove(now); updateParts(dt); updateAmb(dt);
+    if (!shopOpen && !bagOpen && !xOpen) { s.time += dt * (DAY_END - DAY_START) / SEC_PER_DAY; if (s.time >= DAY_END) sleep(true); }
+    updateFade(now); updateAnim(now); updateFishing(now, dt); tryMove(now); updateParts(dt); updateAmb(dt); updateEntities(dt);
     if (scene === 'farm' && Math.random() < dt * 2.2) { const hb = BUILDINGS[0]; spawn(hb.x * T + 70 + rnd(-1, 1), hb.y * T - 2, rnd(-3, 3), rnd(-14, -8), 1.6, '#d9d9d9', 2, 0); }
     const k = Math.min(1, dt * (s.up.boots ? 24 : 16));
     rx += (s.px - rx) * k; ry += (s.py - ry) * k;
