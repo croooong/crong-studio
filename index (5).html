@@ -79,7 +79,7 @@
   .pick{background:#2f2013;border:3px solid var(--edge);border-radius:12px;padding:8px 22px;color:var(--text);font:inherit;font-size:18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
   .pick:hover,.pick:focus-visible{border-color:var(--gold)}
   .pick.cur{border-color:var(--leaf)}
-  canvas.pv{position:static;width:96px;height:120px;image-rendering:pixelated}
+  canvas.pv{position:static;width:96px;height:96px;image-rendering:pixelated}
   #csnote{text-align:center;font-size:13px;opacity:.75}
 </style>
 </head>
@@ -143,8 +143,8 @@
   <div class="card" role="dialog" aria-label="캐릭터 선택">
     <div class="shead"><span>🧑‍🌾 캐릭터를 골라요</span></div>
     <div class="cards">
-      <button class="pick" data-g="female"><canvas class="pv" width="16" height="20"></canvas>여자</button>
-      <button class="pick" data-g="male"><canvas class="pv" width="16" height="20"></canvas>남자</button>
+      <button class="pick" data-g="female"><canvas class="pv" width="16" height="16"></canvas>여자</button>
+      <button class="pick" data-g="male"><canvas class="pv" width="16" height="16"></canvas>남자</button>
     </div>
     <div id="csnote">나중에 🎒 가방의 '캐릭터' 버튼에서 바꿀 수 있어요</div>
   </div>
@@ -155,7 +155,7 @@
 <script>
 (() => {
   'use strict';
-  const T = 16, FW = 44, FH = 32, MW = 32, MH = 22;
+  const T = 16, FW = 72, FH = 52, MW = 32, MH = 22;
   let W = FW, H = FH;
   const $ = id => document.getElementById(id);
   const cv = $('c'), ctx = cv.getContext('2d');
@@ -281,7 +281,7 @@
   const farmMap = Array.from({ length: FH }, () => Array(FW).fill(GRASS));
   for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
     const mh = 3 + (hsh(x >> 1, 0, 5) % 3), mw = 2 + (hsh(0, y >> 1, 8) % 2);
-    const ex = 37 + (hsh(0, y >> 1, 6) % 2), ey = 28 + (hsh(x >> 1, 0, 7) % 2);
+    const ex = FW - 7 + (hsh(0, y >> 1, 6) % 2), ey = FH - 4 + (hsh(x >> 1, 0, 7) % 2);
     let t = GRASS;
     if (x >= ex || y >= ey) t = SEA;
     else if (x >= ex - 2 || y >= ey - 2) t = SAND;
@@ -302,9 +302,19 @@
   for (let y = 10; y <= 14; y++) { farmMap[y][28] = FENCE; farmMap[y][34] = FENCE; }
   farmMap[14][31] = GRASS;
   for (let y = 16; y <= 20; y++) for (let x = 29; x <= 33; x++) farmMap[y][x] = POND;
+  // 넓어진 땅: 호수 두 개(모래 해변 포함)
+  [[46, 26, 9, 6], [10, 38, 8, 5]].forEach(([lx, ly, lw, lh]) => {
+    for (let y = ly - 1; y <= ly + lh; y++) for (let x = lx - 1; x <= lx + lw; x++) {
+      if (farmMap[y][x] !== GRASS) continue;
+      const inside = x >= lx && x < lx + lw && y >= ly && y < ly + lh;
+      const corner = (x === lx || x === lx + lw - 1) && (y === ly || y === ly + lh - 1);
+      farmMap[y][x] = inside && !corner ? POND : SAND;
+    }
+  });
   for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
     const farmZone = x >= 3 && x <= 28 && y >= 5 && y <= 24, pondZone = x >= 27 && x <= 36 && y >= 5 && y <= 22;
-    if (farmMap[y][x] === GRASS && !farmZone && !pondZone && hsh(x, y, 3) % 10 === 0) farmMap[y][x] = TREE;
+    const forest = (x >= 38 && x <= 62 && y >= 7 && y <= 22) || (x >= 20 && x <= 44 && y >= 32 && y <= 46);
+    if (farmMap[y][x] === GRASS && !farmZone && !pondZone && hsh(x, y, 3) % (forest ? 4 : 10) === 0) farmMap[y][x] = TREE;
   }
   let map = farmMap, scene = 'farm', mineHp = {}, floorNo = 0;
 
@@ -333,7 +343,7 @@
       if (!raw) return;
       const d = JSON.parse(raw);
       s = Object.assign(s, d.s); plants = d.plants || {}; loaded = true;
-      if (d.map && d.map.length === FH && d.map[0].length === FW) for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) farmMap[y][x] = d.map[y][x];
+      if (d.map && d.map.length && d.map[0]) for (let y = 0; y < Math.min(FH, d.map.length); y++) for (let x = 0; x < Math.min(FW, d.map[y].length); x++) if (d.map[y][x] === SOIL && farmMap[y][x] === GRASS) farmMap[y][x] = SOIL;
       rx = s.px; ry = s.py;
     } catch (e) {}
   })();
@@ -372,27 +382,20 @@
     '..hRRRRRHHHHHh..', '....WBWWWWWHh...', '....BBBBBBBBRR..', '....BBTBBBBTB...', '....bBBBBBBBb...'
   ];
   const SIDE_BOOTS = ['....OOO..OO.....', '....OO...OOO....', '....OOO..OO.....', '...OOO....OO....'];
-  // 주인공 도트 (여자: 직접 그려 준 그림을 도트로 옮긴 것 / 남자: 여자 모습을 참고해 만든 것) — 16×20
-  const CHAR_PAL = {"o": "#4a1c1c", "c": "#fbe0c4", "C": "#ecad97", "y": "#ffe39f", "Y": "#e0a93f", "H": "#834534", "h": "#5a2a22", "S": "#fef3ee", "s": "#f7b4b4", "K": "#5c1515", "W": "#fefefe", "w": "#dcd2d0", "B": "#6f88c0", "b": "#4b4d76", "T": "#803830", "O": "#b75a44", "N": "#7a3a2c", "R": "#c0392f", "p": "#f4cfc3"};
-  const CHAR_DATA = {"female":{"front":[".....ooooooyyyyy","...occCccCyyYYyy","..oyyyyyyyyyyyyy","occcCccCccCccCyy",".oCCCCCCCCCCCCyy","..hHHHHHHHHHHh..","..HHHHhHHhHyHH..","..HHHhHHHHhHHH..","..HHSKKSSKKSHH..","..HHssSKSKssHH..",".hHH.SSSKSS.HHh.",".H...yyyyyy...H.",".h.WWWWYYWWWW.h.",".H.WWBWWWWBWW.H.",".h.pBBBbbBBBp.h.",".R.pBTBBBBBBp.R.",".h.BBBBTBTBBB.h.","...bbbbbbbbbb..."],"back":[".....ooooooyyyyy","...occCccCyyYYyy","..oyyyyyyyyyyyyy","occcCccCccCccCyy",".oCCCCCCCCCCCCyy","..hHHHHHhHHHHh..","..HHHhHHHHHHHH..","..HHHHHHHHhHHH..","..HHHHhHHHHhHH..","..HHhHHHHhHHHH..",".hHHHHHHHHHHHHh.",".H..WWWWWWWW..H.",".h.WWWWWWWWWW.h.",".H.WWBWWWWBWW.H.",".h.pBBBBBBBBp.h.",".R.pBBTBBBBBp.R.",".h.BBBBBBTBBB.h.","...bbbbbbbbbb..."],"side":[".....ooooooyyyyy","...occCccCyyYYyy","..oyyyyyyyyyyyyy","occcCccCccCccCyy",".oCCCCCCCCCCCCyy","..hHHHHHHHHHHH..","..HHhyHhHHHHHH..","..HHHHHHHHHHHH..","..SKKSSSHHHHHH..","..KSsSSSHHHHHH..","..SSSSSSHHHHHH..","...yYyyyHHHHHH..",".....WWWWWWW.h..",".....WWWWWBW.H..",".....BpbBBBB.h..",".....BppBBBB.R..","....BBBBBBTBBh..","....bbbbbbbbb..."],"legsF":[[".....pp..pp.....","....OyO..OyO...."],["....pp....pp....","...OyO....OyO..."],[".....pp..pp.....","....OyO..OyO...."],["......pppp......",".....OyOOyO....."]],"legsS":[["......pppp......",".....yOOOO......"],["....pp...pp.....","...yOO..OOO....."],["......pppp......",".....yOOOO......"],["......ppp.......",".....OyOO......."]]},"male":{"front":[".....oooooo.....","...occCccCcyYy..","..oyyyyyyyyyyy..","occcCccCccCccCco",".oCCCCCCCCCCCCo.","..hHHHHHHHHHHh..","..HHHhHHhHhHHH..","..HHhHHhHHHhHH..","..HHSKKSSKKSHH..","..HHssSKSKssHH..",".....SSSKSS.....",".....yyyyyy.....","...WWWWYYWWWW...","...WWBWWWWBWW...","...pBBBbbBBBp...","...pBTBBbBBBp...","....BBBBbBBB....","....bbbbbbbb...."],"back":[".....oooooo.....","...occCccCcyYy..","..oyyyyyyyyyyy..","occcCccCccCccCco",".oCCCCCCCCCCCCo.","..hHHHHHhHHHHh..","..HHHhHHHHHHHH..","..HHHHHHHHhHHH..","..HHHHhHHHHHHH..","..HHHHHHHhHHHH..","..HHHHHHHHHHHH..","...WWWWWWWWWW...","...WWWWWWWWWW...","...WWBWWWWBWW...","...pBBBBBBBBp...","...pBBTBbBBBp...","....BBBBbBBB....","....bbbbbbbb...."],"side":[".....oooooo.....","...occCccCcyYy..","..oyyyyyyyyyyy..","occcCccCccCccCco",".oCCCCCCCCCCCCo.","..hHHHHHHHHHHH..","..HHhHHhHHHHHH..","..HHHHHHHHHHHH..","..SKKSSSHHHHH...","..KSsSSSHHHHH...","..SSSSSSHHHHH...","...yYyyy........",".....WWWWWWW....",".....WWWWWBW....",".....BppBBBB....",".....BppBBBB....",".....BBBBBbB....",".....bbbbbbb...."],"legsF":[[".....BB..BB.....","....OyO..OyO...."],["....BB....BB....","...OyO....OyO..."],[".....BB..BB.....","....OyO..OyO...."],["......BBBB......",".....OyOOyO....."]],"legsS":[["......BBBB......",".....yOOOO......"],["....BB...BB.....","...yOO..OOO....."],["......BBBB......",".....yOOOO......"],["......BBB.......",".....OyOO......."]]}};
-  function spriteC(rows) {
-    const c = document.createElement('canvas'); c.width = 16; c.height = rows.length;
-    const g = c.getContext('2d');
-    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (CHAR_PAL[ch]) { g.fillStyle = CHAR_PAL[ch]; g.fillRect(x, y, 1, 1); } }));
-    return c;
-  }
-  function mirrorC(c) {
-    const m = document.createElement('canvas'); m.width = c.width; m.height = c.height;
-    const g = m.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0);
-    return m;
-  }
+  // 주인공 도트 (16×16). 남자는 여자 캐릭터를 참고해 만든 짧은 머리 버전
+  const MALE_HEAD = [...FRONT_HEAD.slice(0, 5), '...hSSSSSSSSh...', '...SSSSSSSSSS...', '...SKKSSSSKKS...', '...SSSKSSKSSS...', '...SSSSKKSSSS...', '....hRRRRRRh....'];
+  const MALE_BACK = [...BACK_HEAD.slice(0, 5), '...hHHHHHHHHh...', '...HHHHRRHHHH...', '...HHHRRRRHHH...', '...HHHHRRHHHH...', '...hHHHHHHHHh...', '.....SSSSSS.....'];
+  const MALE_BODY = ['...WWBWWWWBWW...', '...WBBBBBBBBW...', '...BBTBBBBTBB...', '...BBBBbbBBBB...'];
+  const MALE_SIDE = [...SIDE_ROWS.slice(0, 5), '.SSSSSHHHHHHh...', '.SSSSSSHHHHHh...', '.SSKKSSSHHHHh...', '.SKSSSSSSHHHh...', '.SSSSSSSSHHh....', '...hRRRRRRRh....',
+    '....WBWWWWWW....', '....BBBBBBBBB...', SIDE_ROWS[13], SIDE_ROWS[14]];
   function charFrames(g) {
-    const d = CHAR_DATA[g], out = { down: [], up: [], left: [], right: [] };
+    const m = g === 'male', out = { down: [], up: [], left: [], right: [] };
+    const front = m ? [...MALE_HEAD, ...MALE_BODY] : [...FRONT_HEAD, ...BODY];
+    const back = m ? [...MALE_BACK, ...MALE_BODY] : [...BACK_HEAD, ...BODY];
+    const side = m ? MALE_SIDE : SIDE_ROWS;
     for (let i = 0; i < 4; i++) {
-      out.down.push(spriteC([...d.front, ...d.legsF[i]]));
-      out.up.push(spriteC([...d.back, ...d.legsF[i]]));
-      const l = spriteC([...d.side, ...d.legsS[i]]);
-      out.left.push(l); out.right.push(mirrorC(l));
+      out.down.push(sprite([...front, FRONT_BOOTS[i]])); out.up.push(sprite([...back, FRONT_BOOTS[i]]));
+      const l = sprite([...side, SIDE_BOOTS[i]]); out.left.push(l); out.right.push(mirror(l));
     }
     return out;
   }
@@ -1513,11 +1516,12 @@
   s.animals = s.animals || []; s.friend = s.friend || {}; s.talked = s.talked || {}; s.gifted = s.gifted || {}; s.feed = s.feed || 0;
   if (!loaded) { const k0 = sortedCrops().find(canPlant); s.seeds = mk(CROP_KEYS); s.seeds[k0] = 5; s.seedSel = k0; }
   ensureSeed(); rebuildAnimals();
+  if (s.char) s.char = String(s.char).startsWith('male') ? 'male' : 'female';
   buildChar(s.char || 'female');
   document.querySelectorAll('#charsel .pick').forEach(b => {
     const g = b.dataset.g;
     b.querySelector('canvas').getContext('2d').drawImage(charFrames(g).down[0], 0, 0);
-    b.onclick = () => { s.char = g; buildChar(g); closeX(); say(g === 'male' ? '남자 캐릭터로 바꿨어요!' : '여자 캐릭터로 바꿨어요!'); };
+    b.onclick = () => { s.char = g; buildChar(g); closeX(); say(g.startsWith('male') ? '남자 캐릭터로 바꿨어요!' : '여자 캐릭터로 바꿨어요!'); };
   });
   $('bChar').onclick = () => { closeBag(); openX('charsel'); };
   if (!s.char) openX('charsel');
