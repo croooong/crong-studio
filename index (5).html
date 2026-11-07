@@ -81,6 +81,18 @@
   .pick.cur{border-color:var(--leaf)}
   canvas.pv{position:static;width:96px;height:96px;image-rendering:pixelated}
   #csnote{text-align:center;font-size:13px;opacity:.75}
+  .bar{display:inline-block;width:72px;height:8px;background:#2f2013;border:1px solid var(--edge);border-radius:5px;vertical-align:middle;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--gold)}
+  .bar.hp i{background:#e0584a}
+  .dtabs{display:flex;gap:8px}
+  .dtabs button{flex:1;font:inherit;font-size:15px;color:var(--text);background:#2f2013;border:2px solid var(--edge);border-radius:8px;padding:5px;cursor:pointer}
+  .dtabs button.on{border-color:var(--gold);background:#54391f}
+  .mrow{display:flex;align-items:center;justify-content:center;gap:14px;font-size:18px}
+  #dxSum{min-height:1.2em;text-align:center;font-size:14px;color:var(--leaf)}
+  .bar.en i{background:#6fd06a}
+  #boatBtn{position:fixed;right:calc(36px + var(--sr));bottom:calc(112px + var(--sb));width:56px;height:56px;border-radius:50%;font-size:24px;color:#fff;background:rgba(90,160,200,.38);border:3px solid rgba(255,255,255,.55);touch-action:none}
+  #boatBtn[hidden]{display:none}
+  @media (max-width:700px){.slot{width:40px;height:40px}.slot img{width:26px;height:26px}}
 </style>
 </head>
 <body>
@@ -89,12 +101,16 @@
 <div id="hud">
   <div class="chip">🗓 <b id="hDay">1</b>일차 · <span id="hSeason"></span> · 🕒 <b id="hTime">06:00</b></div>
   <div class="chip">🪙 <b id="hGold">0</b> · 🎒 <b id="hBag">0</b></div>
+  <div class="chip">⭐ Lv <b id="hLv">1</b> <span class="bar"><i id="hXp"></i></span></div>
+  <div class="chip">⚡ <b id="hEn">100</b>/<span id="hEnMax">100</span> <span class="bar en"><i id="hEnBar"></i></span></div>
+  <div class="chip" id="hpChip" hidden>❤ <b id="hHp">100</b>/<span id="hMax">100</span> <span class="bar hp"><i id="hHpBar"></i></span></div>
 </div>
-<div id="topr"><button id="bBag" aria-label="가방">🎒</button><button id="bFs" aria-label="전체화면">⛶</button></div>
+<div id="topr"><button id="bDex" aria-label="도감">📖</button><button id="bBag" aria-label="가방">🎒</button><button id="bFs" aria-label="전체화면">⛶</button></div>
 <div id="toast"></div>
 <div id="hotbar"></div>
 <div id="stick" aria-label="이동 조이스틱"><div id="knob"></div></div>
 <button id="act" aria-label="행동">행동</button>
+<button id="boatBtn" aria-label="배" hidden>🚣</button>
 
 <div id="shop" class="modal" hidden>
   <div class="card" role="dialog" aria-label="상점">
@@ -129,6 +145,29 @@
   </div>
 </div>
 
+<div id="bed" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="침대">
+    <div class="shead"><span>🛏 침대</span><button class="x" id="bedClose" style="margin-left:auto">닫기</button></div>
+    <div id="bedText" style="background:#2f2013;border:2px solid var(--edge);border-radius:10px;padding:10px;font-size:15px;line-height:1.5"></div>
+    <button class="x" id="bedSleep" style="padding:10px;font-size:18px">😴 잠자기</button>
+  </div>
+</div>
+
+<div id="craft" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="제작">
+    <div class="shead"><span>🔨 제작</span><span class="gold" id="crMat"></span><button class="x" id="crClose">닫기</button></div>
+    <div id="crList" class="grid"></div>
+    <div style="text-align:center;font-size:13px;opacity:.8">🏛️ 마을회관 제작대 · 나무를 베어 장작을 모으고, 광산에서 돌과 구리를 캐요. 만든 장식은 망치(8번)로 놓아요</div>
+  </div>
+</div>
+
+<div id="decorpick" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="장식 고르기">
+    <div class="shead"><span>🔨 놓을 장식</span><button class="x" id="dpClose" style="margin-left:auto">닫기</button></div>
+    <div id="dpList" class="grid"></div>
+  </div>
+</div>
+
 <div id="dlg" class="modal" hidden>
   <div class="card" role="dialog" aria-label="대화">
     <div class="shead"><img id="dImg" alt=""><span id="dName"></span><span class="hearts" id="dHeart"></span><button class="x" id="dClose">닫기</button></div>
@@ -150,12 +189,22 @@
   </div>
 </div>
 
+<div id="dex" class="modal" hidden>
+  <div class="card" role="dialog" aria-label="도감">
+    <div class="shead"><span>📖 도감</span><span class="gold" id="dxLv"></span><button class="x" id="dxClose">닫기</button></div>
+    <div class="mrow"><button class="x" id="dxPrev">◀</button><b id="dxMonth"></b><button class="x" id="dxNext">▶</button></div>
+    <div class="dtabs"><button data-k="crop" class="on">작물</button><button data-k="fish">물고기</button><button data-k="ore">광물·장작</button><button data-k="good">축산물</button></div>
+    <div id="dxList" class="grid"></div>
+    <div id="dxSum"></div>
+  </div>
+</div>
+
 <div id="rotate"><span>📱↔️</span>가로로 돌려서 플레이해 주세요</div>
 
 <script>
 (() => {
   'use strict';
-  const T = 16, FW = 72, FH = 52, MW = 32, MH = 22;
+  const T = 16, FW = 100, FH = 72, MW = 32, MH = 22;
   let W = FW, H = FH;
   const $ = id => document.getElementById(id);
   const cv = $('c'), ctx = cv.getContext('2d');
@@ -164,8 +213,10 @@
   // ================= 데이터 =================
   const GRASS = 0, SOIL = 1, HOUSE = 2, BOX = 3, POND = 4, SHOP = 5, MOUNTAIN = 6, SEA = 7, SAND = 8, TREE = 9, CAVE = 10, FENCE = 11, BARN = 12;
   const FLOOR = 20, WALLM = 21, ROCK = 22, COPPER = 23, IRON = 24, GOLD = 25, CRYSTAL = 26, LUP = 27, LDOWN = 28;
-  const SOLID = new Set([HOUSE, BOX, POND, SHOP, MOUNTAIN, SEA, TREE, CAVE, FENCE, BARN, WALLM, ROCK, COPPER, IRON, GOLD, CRYSTAL, LUP, LDOWN]);
-  const DAY_START = 360, DAY_END = 1440, SEC_PER_DAY = 150;
+  const PATH = 50, COBBLE = 51, BRIDGE = 52, CLIFF = 53, STAIRS = 54, BUSH = 55, DECO = 56, DECOR = 57, DECORW = 58, TCHEST = 59, WORKBENCH = 60, COUNTER = 61, BOARD = 62, PLANT = 63, HALLDOOR = 41;
+  const HFLOOR = 30, HWALL = 31, BED = 32, TABLE = 33, KITCHEN = 34, MIRROR = 35, SHELF = 36, HEXIT = 37, RUG = 38, DOOR = 40;
+  const SOLID = new Set([HOUSE, BOX, POND, SHOP, MOUNTAIN, SEA, TREE, CAVE, FENCE, BARN, CLIFF, BUSH, DECO, DECOR, TCHEST, WORKBENCH, COUNTER, BOARD, PLANT, HWALL, BED, TABLE, KITCHEN, MIRROR, SHELF, WALLM, ROCK, COPPER, IRON, GOLD, CRYSTAL, LUP, LDOWN]);
+  const DAY_START = 360, DAY_END = 1470, SEC_PER_DAY = 155, WAKE_LATE = 600;
 
   // 실제 현재 계절 (북반구 기준: 3~5 봄, 6~8 여름, 9~11 가을, 12~2 겨울)
   const SEASON = (() => { const m = new Date().getMonth(); return m >= 2 && m <= 4 ? 'spring' : m >= 5 && m <= 7 ? 'summer' : m >= 8 && m <= 10 ? 'autumn' : 'winter'; })();
@@ -217,7 +268,8 @@
     copper:  { name: '구리', icon: '🟠', price: 18 },
     iron:    { name: '철',   icon: '⚙️', price: 35 },
     gold:    { name: '금',   icon: '🟡', price: 70 },
-    crystal: { name: '수정', icon: '💎', price: 150 }
+    crystal: { name: '수정', icon: '💎', price: 150 },
+    wood:    { name: '장작', icon: '🪵', price: 8 }
   };
   const ORE_OF = { [COPPER]: 'copper', [IRON]: 'iron', [GOLD]: 'gold', [CRYSTAL]: 'crystal' };
   const GOODS = {
@@ -269,6 +321,8 @@
     { id: 'sickle', icon: '🌾', name: '큰 낫',         desc: '5×5칸을 한 번에 수확해요',       price: 450 },
     { id: 'rod',    icon: '🎣', name: '좋은 낚싯대',   desc: '입질이 빨라지고 여유가 늘어요',   price: 350 },
     { id: 'pick',   icon: '⛏️', name: '강철 곡괭이',   desc: '광석을 한 번에 캐요',            price: 500 },
+    { id: 'axe',    icon: '🪓', name: '강철 도끼',     desc: '나무를 더 적게 쳐도 쓰러져요',    price: 350 },
+    { id: 'sword',  icon: '🗡️', name: '강철 검',       desc: '몬스터에게 더 큰 피해를 줘요',    price: 400 },
     { id: 'boots',  icon: '👢', name: '가벼운 부츠',   desc: '더 빠르게 걸어요',               price: 250 }
   ];
   const hsh = (x, y, k) => (((x * 73856093) ^ (y * 19349663) ^ (k * 83492791)) >>> 0);
@@ -281,7 +335,7 @@
   const farmMap = Array.from({ length: FH }, () => Array(FW).fill(GRASS));
   for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
     const mh = 3 + (hsh(x >> 1, 0, 5) % 3), mw = 2 + (hsh(0, y >> 1, 8) % 2);
-    const ex = FW - 7 + (hsh(0, y >> 1, 6) % 2), ey = FH - 4 + (hsh(x >> 1, 0, 7) % 2);
+    const ex = 65 + (hsh(0, y >> 1, 6) % 2), ey = 48 + (hsh(x >> 1, 0, 7) % 2);
     let t = GRASS;
     if (x >= ex || y >= ey) t = SEA;
     else if (x >= ex - 2 || y >= ey - 2) t = SAND;
@@ -297,6 +351,7 @@
     { t: BARN,  x: 29, y: 6, w: 5, h: 4 }
   ];
   BUILDINGS.forEach(b => { for (let y = b.y; y < b.y + b.h; y++) for (let x = b.x; x < b.x + b.w; x++) farmMap[y][x] = b.t; });
+  farmMap[9][8] = DOOR; farmMap[9][9] = DOOR;   // 집 문 (걸어 들어가요)
   const PEN = { x0: 29, y0: 10, x1: 33, y1: 13 };
   for (let x = 28; x <= 34; x++) farmMap[14][x] = FENCE;
   for (let y = 10; y <= 14; y++) { farmMap[y][28] = FENCE; farmMap[y][34] = FENCE; }
@@ -311,10 +366,75 @@
       farmMap[y][x] = inside && !corner ? POND : SAND;
     }
   });
+  // ===== 마을: 강과 다리, 흙길, 광장과 분수, 여러 집, 절벽 계단, 덤불 =====
+  const riverX = y => 40 + Math.round(2 * Math.sin(y / 4.5) + 1.5 * Math.sin(y / 9 + 1));
+  const setT = (x, y, t, only) => { if (x >= 0 && y >= 0 && x < FW && y < FH && (!only || only.includes(farmMap[y][x]))) farmMap[y][x] = t; };
+  for (let y = 5; y < FH - 3; y++) { const cx = riverX(y); for (let x = cx - 1; x <= cx + 1; x++) setT(x, y, POND, [GRASS, SAND, MOUNTAIN]); }
+  for (let y = 4; y < FH - 2; y++) {
+    const cx = riverX(y);
+    for (let x = cx - 3; x <= cx + 3; x++) {
+      if (farmMap[y][x] !== GRASS) continue;
+      let near = false; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (farmMap[y + dy] && farmMap[y + dy][x + dx] === POND) near = true;
+      if (near && hsh(x, y, 61) % 10 < 7) farmMap[y][x] = SAND;
+    }
+  }
+  const paint = (x0, y0, x1, y1, wd) => {
+    let x = x0, y = y0, horiz = true;
+    const step = () => {
+      for (let k = 0; k < wd; k++) setT(horiz ? x : x + k, horiz ? y + k : y, PATH, [GRASS, SAND]);
+      if (hsh(x, y, 71) % 7 === 0) setT(x + (horiz ? 0 : (hsh(x, y, 72) % 2 ? -1 : wd)), y + (horiz ? (hsh(x, y, 73) % 2 ? -1 : wd) : 0), PATH, [GRASS, SAND]);
+    };
+    while (x !== x1) { step(); x += Math.sign(x1 - x); }
+    horiz = false;
+    while (y !== y1) { step(); y += Math.sign(y1 - y); }
+    step();
+  };
+  const bridge = (y0) => { for (let y = y0; y <= y0 + 1; y++) { const cx = riverX(y); for (let x = cx - 3; x <= cx + 3; x++) setT(x, y, BRIDGE, [POND, SAND, PATH, GRASS]); } };
+  paint(8, 10, 27, 10, 2); paint(27, 10, 27, 5, 2); paint(26, 11, 26, 15, 2);
+  paint(26, 15, riverX(15) - 4, 15, 2);
+  bridge(15);
+  paint(riverX(15) + 4, 15, 44, 15, 2);
+  for (let y = 11; y <= 21; y++) for (let x = 44; x <= 55; x++) setT(x, y, COBBLE, [GRASS, SAND, PATH]);
+  paint(48, 10, 49, 10, 2); paint(54, 9, 54, 10, 2);
+  paint(56, 14, 60, 14, 2); paint(56, 21, 60, 21, 2); paint(56, 14, 56, 21, 2);
+  paint(49, 22, 49, 34, 2); paint(riverX(34) - 8, 34, riverX(34) - 4, 34, 2); paint(riverX(34) + 4, 34, 49, 34, 2);
+  bridge(34);
+  const DECOS = [
+    { style: 'fountain', x: 48, y: 14, w: 4, h: 4, msg: '시원한 물이 솟는 분수예요 ⛲' },
+    { style: 'hall', x: 46, y: 5, w: 6, h: 5, msg: '시계탑이 있는 마을회관이에요. 가운데 문으로 들어가 제작대를 쓸 수 있어요 🕰️' },
+    { style: 'tower', x: 53, y: 3, w: 4, h: 6, msg: '마법사의 탑이에요. 문은 굳게 잠겨 있어요 🔮' },
+    { style: 'blue', x: 58, y: 10, w: 5, h: 4, msg: '파란 지붕 집이에요. 이웃이 살고 있어요 🏠' },
+    { style: 'red', x: 58, y: 17, w: 5, h: 4, msg: '붉은 지붕 집이에요. 창가에 꽃이 가득해요 🌷' },
+    { style: 'cottage', x: 56, y: 23, w: 5, h: 4, msg: '아담한 오두막이에요 🪵' },
+    { style: 'lamp', x: 44, y: 11, w: 1, h: 1, msg: '밤이 되면 불이 켜지는 가로등이에요 💡' }, { style: 'lamp', x: 55, y: 11, w: 1, h: 1, msg: '밤이 되면 불이 켜지는 가로등이에요 💡' },
+    { style: 'lamp', x: 44, y: 21, w: 1, h: 1, msg: '밤이 되면 불이 켜지는 가로등이에요 💡' }, { style: 'lamp', x: 55, y: 21, w: 1, h: 1, msg: '밤이 되면 불이 켜지는 가로등이에요 💡' },
+    { style: 'bench', x: 46, y: 12, w: 2, h: 1, msg: '앉아서 쉬고 싶은 벤치예요 🪑' }, { style: 'bench', x: 52, y: 12, w: 2, h: 1, msg: '앉아서 쉬고 싶은 벤치예요 🪑' },
+    { style: 'bench', x: 46, y: 20, w: 2, h: 1, msg: '앉아서 쉬고 싶은 벤치예요 🪑' }, { style: 'bench', x: 52, y: 20, w: 2, h: 1, msg: '앉아서 쉬고 싶은 벤치예요 🪑' }
+  ];
+  DECOS.forEach(d => { d.t = DECO; BUILDINGS.push(d); for (let y = d.y; y < d.y + d.h; y++) for (let x = d.x; x < d.x + d.w; x++) farmMap[y][x] = DECO; });
+  farmMap[9][48] = HALLDOOR; farmMap[9][49] = HALLDOOR;   // 마을회관 문 (걸어 들어가요)
+  const decoAt = (x, y) => DECOS.find(d => x >= d.x && x < d.x + d.w && y >= d.y && y < d.y + d.h) || null;
+  const ledge = (y, x0, x1, gaps) => { for (let x = x0; x <= x1; x++) { if (gaps.includes(x)) farmMap[y][x] = STAIRS; else setT(x, y, CLIFF, [GRASS, SAND, PATH]); } };
+  ledge(27, 4, 14, [9, 10]); ledge(24, 43, 55, [49, 50]); ledge(30, 57, 62, [60]);
+  // 바다 위 작은 섬들 (배를 타고 가요). 가운데에 보물 상자가 있어요
+  [[74, 18, 4], [82, 40, 5], [72, 60, 4], [90, 56, 5], [88, 24, 3]].forEach(([ix, iy, r]) => {
+    for (let y = iy - r - 1; y <= iy + r + 1; y++) for (let x = ix - r - 1; x <= ix + r + 1; x++) {
+      const d = Math.hypot(x - ix, (y - iy) * 1.2) + (hsh(x, y, 41) % 3) * 0.4;
+      if (d < r - 1) setT(x, y, GRASS, [SEA, SAND]); else if (d < r + 0.4) setT(x, y, SAND, [SEA]);
+    }
+    farmMap[iy][ix] = TCHEST;
+  });
+  for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
+    const farmZone = x >= 3 && x <= 28 && y >= 5 && y <= 24, penZone = x >= 27 && x <= 36 && y >= 5 && y <= 22;
+    if (farmMap[y][x] !== GRASS || farmZone || penZone) continue;
+    const nearPath = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => farmMap[y + dy] && (farmMap[y + dy][x + dx] === PATH || farmMap[y + dy][x + dx] === COBBLE));
+    if (hsh(x, y, 77) % 100 < (nearPath ? 14 : 4)) farmMap[y][x] = BUSH;
+  }
   for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
     const farmZone = x >= 3 && x <= 28 && y >= 5 && y <= 24, pondZone = x >= 27 && x <= 36 && y >= 5 && y <= 22;
-    const forest = (x >= 38 && x <= 62 && y >= 7 && y <= 22) || (x >= 20 && x <= 44 && y >= 32 && y <= 46);
-    if (farmMap[y][x] === GRASS && !farmZone && !pondZone && hsh(x, y, 3) % (forest ? 4 : 10) === 0) farmMap[y][x] = TREE;
+    const town = x >= 42 && x <= 63 && y >= 3 && y <= 30;
+    const forest = !town && ((x >= 38 && x <= 62 && y >= 7 && y <= 22) || (x >= 20 && x <= 44 && y >= 32 && y <= 46));
+    if (farmMap[y][x] === GRASS && !farmZone && !pondZone && hsh(x, y, 3) % (town ? 14 : forest ? 4 : 10) === 0) farmMap[y][x] = TREE;
   }
   let map = farmMap, scene = 'farm', mineHp = {}, floorNo = 0;
 
@@ -333,6 +453,9 @@
     try {
       const sv = Object.assign({}, s);
       if (scene === 'mine') { sv.px = 27; sv.py = 5; sv.face = [0, 1]; sv.tool = 0; }
+      else if (scene === 'house') { sv.px = 8; sv.py = 10; sv.face = [0, 1]; }
+      else if (scene === 'hall') { sv.px = 48; sv.py = 10; sv.face = [0, 1]; }
+      if (s.sailing && scene === 'farm' && s.shore) { sv.px = s.shore[0]; sv.py = s.shore[1]; sv.sailing = false; }
       localStorage.setItem(SAVE_KEY, JSON.stringify({ s: sv, plants, map: farmMap }));
     } catch (e) {}
   }
@@ -465,8 +588,10 @@
     toastEl.textContent = msg; toastEl.classList.add('on');
     clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('on'), ms || 1800);
   }
-  const SLOT_KEYS = ['hoe', 'can', 'pouch', 'sickle', 'rod', 'pick'];
-  const SLOT_NAMES = ['호미', '물뿌리개', '씨앗', '낫', '낚싯대', '곡괭이'];
+  TOOLSPR.axe = sprite(['................', '....GGGG........', '...GGGGGGg......', '...GGGGGlg......', '...GGGG.l.......', '....GG..l.......', ...Array(7).fill('........l.......'), ...Array(3).fill('........L.......')]);
+  TOOLSPR.hammer = sprite(['................', '....GGGGGGGG....', '....GGGGGGGg....', '....GGGGGGGG....', '....gggggggg....', ...Array(8).fill('........l.......'), ...Array(3).fill('........L.......')]);
+  const SLOT_KEYS = ['hoe', 'can', 'pouch', 'sickle', 'rod', 'pick', 'axe', 'hammer'];
+  const SLOT_NAMES = ['호미', '물뿌리개', '씨앗', '낫', '낚싯대', '곡괭이', '도끼', '망치'];
   const slotEls = SLOT_KEYS.map((k, i) => {
     const b = document.createElement('button'); b.className = 'slot'; b.title = SLOT_NAMES[i]; b.setAttribute('aria-label', SLOT_NAMES[i]);
     b.innerHTML = `<i>${i + 1}</i><img alt="" src="${TOOLSPR[k].toDataURL()}"><span class="ic"></span><em></em>`;
@@ -484,6 +609,7 @@
   function selectTool(i) {
     if (locked() || fishing) return;
     if (i === 2 && s.tool === 2) { openSeedPick(); return; }
+    if (i === 7 && s.tool === 7) { openDecorPick(); return; }
     s.tool = i;
     if (i === 2) ensureSeed();
   }
@@ -493,13 +619,24 @@
   function hud() {
     const h = Math.floor(s.time / 60) % 24, m = Math.floor(s.time % 60 / 10) * 10;
     setText('hDay', s.day);
-    setText('hSeason', scene === 'mine' ? `⛏ 광산 B${floorNo}` : `${SN[SEASON][1]} ${SN[SEASON][0]}`);
+    setText('hSeason', scene === 'mine' ? `⛏ 광산 B${floorNo}` : scene === 'house' ? '🏠 집 안' : scene === 'hall' ? '🏛️ 마을회관' : `${SN[SEASON][1]} ${SN[SEASON][0]}`);
     setText('hTime', String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'));
     setText('hGold', s.gold);
     setText('hBag', sum(s.harvest) + sum(s.fish) + sum(s.ore) + sum(s.goods));
+    setText('hLv', s.lv);
+    updateBoatBtn();
+    setText('hEn', Math.ceil(s.en)); setText('hEnMax', maxEn());
+    const enw = Math.round(100 * s.en / maxEn()); if (lastText.enw !== enw) { lastText.enw = enw; $('hEnBar').style.width = enw + '%'; }
+    const xpw = Math.round(100 * s.xp / xpNeed(s.lv)); if (lastText.xpw !== xpw) { lastText.xpw = xpw; $('hXp').style.width = xpw + '%'; }
+    const inMine = scene === 'mine'; if (lastText.mine !== inMine) { lastText.mine = inMine; $('hpChip').hidden = !inMine; }
+    if (inMine) {
+      setText('hHp', Math.max(0, Math.ceil(s.hp))); setText('hMax', maxHp());
+      const hpw = Math.round(100 * Math.max(0, s.hp) / maxHp()); if (lastText.hpw !== hpw) { lastText.hpw = hpw; $('hHpBar').style.width = hpw + '%'; }
+    }
     const c = CROPS[s.seedSel];
     slotEls.forEach((sl, i) => {
       sl.b.classList.toggle('sel', i === s.tool);
+      if (i === 7) { const dr = s.decorSel && RECIPE[s.decorSel], ic = dr ? dr.icon : '', n = dr ? String(s.crafted[s.decorSel] || 0) : ''; if (sl.ic._v !== ic) { sl.ic._v = ic; sl.ic.textContent = ic; } if (sl.em._v !== n) { sl.em._v = n; sl.em.textContent = n; } }
       if (i === 2) { if (sl.ic._v !== c.icon) { sl.ic._v = c.icon; sl.ic.textContent = c.icon; } const n = String(s.seeds[s.seedSel]); if (sl.em._v !== n) { sl.em._v = n; sl.em.textContent = n; } sl.ic.classList.toggle('gray', !canPlant(s.seedSel)); }
     });
   }
@@ -568,10 +705,15 @@
   // ================= 도구 동작 애니메이션 =================
   const PIV = { down: [12, 10], up: [4, 10], left: [4, 11], right: [12, 11] };
   const HOE = { down: [-25, 180], up: [55, 0], left: [55, -90], right: [-55, 90] };
-  const SWING = { hoe: 1, sickle: 1, pick: 1 };
+  const SWING = { hoe: 1, sickle: 1, pick: 1, sword: 1, axe: 1 };
+  TOOLSPR.sword = sprite(['........G.......', ...Array(8).fill('.......GG.......'), '......gggg......', ...Array(5).fill('........l.......'), '.......LL.......']);
   const ease = x => 1 - (1 - x) * (1 - x);
   let anim = null;
-  function startAnim(type, dur, hit, fn) { anim = { type, t0: NOW, dur, hit, fn, done: false, face: [...s.face], last: 0 }; }
+  function startAnim(type, dur, hit, fn) {
+    const c = ENERGY_COST[type] || 0;
+    if (c) { if (s.en < c) return say('너무 지쳤어요… 침대에서 쉬거나 음식을 먹어요 🍙', 2400); s.en -= c; }
+    anim = { type, t0: NOW, dur, hit, fn, done: false, face: [...s.face], last: 0 };
+  }
   function hoeAngle(dir, t) {
     const [aR, aS] = HOE[dir], mid = (aR + aS) / 2;
     if (t < 0.4) return mid + (aR - mid) * ease(t / 0.4);
@@ -592,6 +734,7 @@
     return [PX + pv[0] + d[0] * ext, PY + pv[1] + d[1] * ext + 1];
   }
   function bodyDy(a, t) {
+    if (a.type === 'craft') { const ph = (t * 3) % 1; return (ph > 0.5 && ph < 0.72) ? 1 : 0; }
     if (SWING[a.type]) return (t > 0.5 && t < 0.72) ? 1 : 0;
     if (a.type === 'seed' || a.type === 'pluck') return (t > 0.15 && t < 0.8) ? 1 : 0;
     return 0;
@@ -601,6 +744,13 @@
     const t = (now - anim.t0) / anim.dur, f = anim.face, PX = s.px * T, PY = s.py * T;
     const tc = [(s.px + f[0]) * T + 8, (s.py + f[1]) * T + 8];
     if (!anim.done && t >= anim.hit) { anim.done = true; anim.fn(); }
+    if (anim.type === 'craft') {
+      const cyc = Math.floor(t * 3), ph = (t * 3) % 1;
+      if (ph >= 0.56 && anim.cyc !== cyc) {
+        anim.cyc = cyc; const cols = ['#ffd25e', '#fff0a0', '#c9925a', '#8f5c2d'];
+        for (let i = 0; i < 9; i++) spawn(tc[0] + rnd(-10, 10), tc[1] + rnd(-4, 2), rnd(-70, 70), rnd(-100, -30), rnd(.25, .5), cols[i % 4], i % 3 === 0 ? 2 : 1, 340);
+      }
+    }
     if (anim.type === 'water' && t > 0.3 && t < 0.78 && now - anim.last > 45) {
       anim.last = now; const tip = canPose(anim, t, PX, PY).tip;
       for (let i = 0; i < 2; i++) spawn(tip[0], tip[1], (tc[0] - tip[0]) / 0.26 + rnd(-8, 8), (tc[1] - tip[1]) / 0.26 + rnd(-8, 8), .26, i ? '#9fd6ff' : '#5aa8e8', 1, 0);
@@ -614,6 +764,12 @@
   function drawTool(now, PX, PY, dy) {
     const a = anim, t = Math.min(1, (now - a.t0) / a.dur), dir = faceName(a.face), pv = PIV[dir];
     const ox = PX + pv[0], oy = PY + pv[1] + dy;
+    if (a.type === 'craft') {
+      const ph = (t * 3) % 1;
+      ctx.save(); ctx.translate(ox, oy); ctx.rotate(hoeAngle(dir, ph) * Math.PI / 180); ctx.drawImage(TOOLSPR.hammer, -8, -13); ctx.restore(); rect('#f7dcc8', ox - 1, oy - 1, 2, 2);
+      rect('#2b1d14', PX - 3, PY - 9, 22, 5); rect('#3d2b1b', PX - 2, PY - 8, 20, 3); rect('#ffd25e', PX - 2, PY - 8, Math.round(20 * t), 3);
+      return;
+    }
     if (SWING[a.type]) {
       ctx.save(); ctx.translate(ox, oy); ctx.rotate(hoeAngle(dir, t) * Math.PI / 180);
       ctx.drawImage(TOOLSPR[a.type], -8, -13); ctx.restore(); rect('#f7dcc8', ox - 1, oy - 1, 2, 2);
@@ -632,6 +788,7 @@
   const ROD = { down: [-30, 150], up: [40, -15], left: [50, -70], right: [-50, 70] };
   let fishing = null;
   function startFishing(tx, ty, tile) {
+    if (s.en < 2) return say('너무 지쳤어요… 침대에서 쉬거나 음식을 먹어요 🍙', 2400); s.en -= 2;
     fishing = { state: 'cast', t0: NOW, tx, ty, kind: tile === SEA ? 'sea' : 'pond', face: [...s.face], cur: 0, dir: 1, fish: null, until: 0, bobOff: 0, zw: 20, zc: 50, speed: 120 };
   }
   function pickFish(kind) {
@@ -648,7 +805,7 @@
     if (f.state === 'bite') { f.state = 'reel'; f.t0 = NOW; f.cur = 0; f.dir = 1; const d = f.fish.diff; f.zw = [0, 34, 24, 16][d]; f.zc = rnd(25, 75); f.speed = [0, 110, 135, 165][d]; return; }
     if (f.state === 'reel') {
       if (Math.abs(f.cur - f.zc) <= f.zw / 2) {
-        const fi = f.fish; s.fish[fi.id]++; sparkleAt(s.px, s.py);
+        const fi = f.fish; s.fish[fi.id]++; record('fish', fi.id); gainXp(Math.round(fi.price / 8) + fi.diff * 2); sparkleAt(s.px, s.py);
         pop(`+1 ${fi.icon}`, s.px * T + 8, s.py * T - 6);
         fishing = null; say(`${fi.icon} ${fi.name}을(를) 낚았어요! (${fi.price}골드)`); save();
       } else endFishing('놓쳤어요… 😢');
@@ -719,11 +876,13 @@
     return m;
   }
   function switchScene(to, floor) {
-    scene = to; parts.length = 0; amb.length = 0; pops.length = 0; anim = null; fishing = null;
+    scene = to; s.sailing = false; parts.length = 0; amb.length = 0; pops.length = 0; anim = null; fishing = null;
     if (to === 'mine') {
-      floorNo = floor; map = genMine(floor); W = MW; H = MH; mineHp = {};
+      floorNo = floor; map = genMine(floor); W = MW; H = MH; mineHp = {}; spawnMonsters(floor);
       s.px = 2; s.py = MH >> 1; s.face = [-1, 0]; s.best = Math.max(s.best, floor);
-    } else { map = farmMap; W = FW; H = FH; s.px = 27; s.py = 5; s.face = [0, 1]; }
+    } else if (to === 'house') { map = houseMap; W = RW; H = RH; s.px = 5; s.py = 7; s.face = [0, -1]; monsters = []; }
+    else if (to === 'hall') { map = hallMap; W = RW; H = RH; s.px = 5; s.py = 7; s.face = [0, -1]; monsters = []; say('🏛️ 마을회관이에요! 오른쪽 위 제작대에서 물건을 만들 수 있어요', 3600); }
+    else { map = farmMap; W = FW; H = FH; if (floor === 'house') { s.px = 8; s.py = 10; } else if (floor === 'hall') { s.px = 48; s.py = 10; } else { s.px = 27; s.py = 5; } s.face = [0, 1]; monsters = []; }
     rx = s.px; ry = s.py;
   }
   function pickAt(tx, ty) {
@@ -734,6 +893,7 @@
     if (hp > 0) { mineHp[key] = hp; return; }
     delete mineHp[key]; map[ty][tx] = FLOOR;
     const id = ORE_OF[t] || 'stone'; s.ore[id]++; if (hearts('cheolsu') >= 4 && Math.random() < 0.25) s.ore[id]++;
+    record('ore', id); gainXp(ORE_XP[id] || 1);
     pop(`+1 ${ORES[id].icon}`, tx * T + 8, ty * T); if (ORE_OF[t]) sparkleAt(tx, ty);
     save();
   }
@@ -744,8 +904,7 @@
     if (!fade.done && u >= 0.5) { fade.done = true; fade.fn(); }
     if (u >= 1) fade = null;
   }
-
-  // ================= 동물 / NPC =================
+// ================= 동물 / NPC =================
   const ANIM_R = [];
   NPCS.forEach(n => { n.kind = 'npc'; n.dx = n.x; n.dy = n.y; n.wt = Math.random() * 3; n.face = [0, 1]; });
   const hearts = id => Math.min(10, Math.floor((s.friend[id] || 0) / 20));
@@ -813,7 +972,7 @@
   function touchAnimal(a) {
     const d = a.d, A = ANIMALS[a.type], px = a.x * T + 8, py = a.y * T;
     if (d.ready) {
-      const n = d.hearts >= 5 ? 2 : 1; s.goods[A.good] += n; d.ready = false;
+      const n = d.hearts >= 5 ? 2 : 1; s.goods[A.good] += n; d.ready = false; record('good', A.good, n); gainXp(4);
       pop(`+${n} ${GOODS[A.good].icon}`, px, py); sparkleAt(a.x, a.y); say(`${d.name}이(가) ${GOODS[A.good].name}을(를) 줬어요!`); save(); return;
     }
     if (!d.pet) { d.pet = true; d.hearts = Math.min(5, d.hearts + 1); pop('❤', px, py); say(`${d.name}을(를) 쓰다듬었어요 ❤ ${d.hearts}/5`); save(); }
@@ -832,7 +991,7 @@
   }
 
   // ---------- 창 열고 닫기 ----------
-  const XM = ['seedpick', 'barn', 'dlg', 'charsel'];
+  const XM = ['seedpick', 'barn', 'dlg', 'charsel', 'dex', 'bed', 'craft', 'decorpick'];
   let dlgNpc = null;
   function openX(id) { xOpen = true; XM.forEach(m => { $(m).hidden = m !== id; }); stickDir = null; held.clear(); }
   function closeX() { if (!s.char) return; xOpen = false; dlgNpc = null; XM.forEach(m => { $(m).hidden = true; }); ensureSeed(); save(); }
@@ -913,8 +1072,495 @@
     if (!takeItem(it.id)) return;
     s.gifted[n.id] = s.day;
     const love = n.love.includes(it.id), like = n.like.includes(it.id);
-    s.friend[n.id] = Math.min(200, (s.friend[n.id] || 0) + (love ? 60 : like ? 30 : 15));
+    s.friend[n.id] = Math.min(200, (s.friend[n.id] || 0) + (love ? 60 : like ? 30 : 15)); gainXp(3);
     renderDlg(love ? '와! 정말 좋아하는 거예요! 고마워요 ❤' : like ? '고마워요, 마음에 들어요!' : '선물이라니, 고마워요.', 'menu'); save();
+  }
+
+  // ================= 경험치 / 레벨 =================
+  const xpNeed = lv => 40 + 20 * lv + 5 * lv * lv;
+  const maxHp = () => 100 + (s.lv - 1) * 10;
+  const priceMul = () => Math.min(1.4, 1 + 0.02 * (s.lv - 1));
+  const ORE_XP = { stone: 1, copper: 4, iron: 7, gold: 12, crystal: 20 };
+  function gainXp(n) {
+    if (!(n > 0)) return;
+    s.xp += n; let up = 0;
+    while (s.xp >= xpNeed(s.lv)) { s.xp -= xpNeed(s.lv); s.lv++; up++; }
+    if (n >= 5 && !up) pop(`+${n} XP`, s.px * T + 8, s.py * T - 12);
+    if (up) {
+      const bonus = s.lv * 20; s.hp = maxHp(); s.gold += bonus; sparkleAt(s.px, s.py); sparkleAt(s.px, s.py - 1);
+      say(`⭐ 레벨 업! Lv ${s.lv} · +${bonus}🪙 · 최대 체력 ${maxHp()} · 판매가 +${Math.round((priceMul() - 1) * 100)}%`, 3600);
+    }
+  }
+
+  // ================= 도감 (달마다 얻은 작물·물고기·광물·축산물) =================
+  const monthKey = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+  const dexKinds = ['crop', 'fish', 'ore', 'good'];
+  function ensureDex() {
+    if (!s.dex) s.dex = { total: {}, months: {} };
+    if (!s.dex.total) s.dex.total = {}; if (!s.dex.months) s.dex.months = {};
+    dexKinds.forEach(k => { if (!s.dex.total[k]) s.dex.total[k] = {}; });
+  }
+  function record(kind, id, n) {
+    ensureDex(); n = n || 1;
+    const mk = monthKey(); if (!s.dex.months[mk]) s.dex.months[mk] = {};
+    const m = s.dex.months[mk]; if (!m[kind]) m[kind] = {};
+    m[kind][id] = (m[kind][id] || 0) + n; s.dex.total[kind][id] = (s.dex.total[kind][id] || 0) + n;
+  }
+  const dexMeta = (kind, id) => kind === 'crop' ? CROPS[id] : kind === 'fish' ? FISH.find(f => f.id === id) : kind === 'ore' ? ORES[id] : GOODS[id];
+  const dexIds = kind => kind === 'crop' ? CROP_KEYS.slice() : kind === 'fish' ? FISH.map(f => f.id) : kind === 'ore' ? Object.keys(ORES) : Object.keys(GOODS);
+  const dexNames = { crop: '작물', fish: '물고기', ore: '광물·장작', good: '축산물' };
+  let dxKey = '', dxTab = 'crop';
+  function dexMonths() { ensureDex(); const ks = Object.keys(s.dex.months); if (!ks.includes(monthKey())) ks.push(monthKey()); return ks.sort(); }
+  function openDex() { if (locked() || fishing) return; ensureDex(); dxKey = monthKey(); dxTab = 'crop'; openX('dex'); renderDex(); }
+  function renderDex() {
+    ensureDex();
+    const [yy, mm] = dxKey.split('-');
+    $('dxMonth').textContent = `${dxKey === monthKey() ? '이번 달 · ' : ''}${yy}년 ${+mm}월`;
+    $('dxLv').textContent = `Lv ${s.lv} · XP ${s.xp}/${xpNeed(s.lv)}`;
+    document.querySelectorAll('.dtabs button').forEach(b => b.classList.toggle('on', b.dataset.k === dxTab));
+    const mon = (s.dex.months[dxKey] || {})[dxTab] || {}, tot = s.dex.total[dxTab] || {};
+    const ids = dexIds(dxTab).sort((a, b) => dexMeta(dxTab, a).name.localeCompare(dexMeta(dxTab, b).name, 'ko'));
+    const found = ids.filter(i => tot[i] > 0), unk = ids.filter(i => !(tot[i] > 0));
+    const list = $('dxList'); list.innerHTML = '';
+    found.forEach(i => { const d = dexMeta(dxTab, i); row(list, d.icon, d.name, `이번 달 ×${mon[i] || 0} · 누적 ×${tot[i]}`, [], mon[i] ? '' : 'gray'); });
+    unk.forEach(i => row(list, '❔', '???', '아직 얻지 못했어요', [], 'gray'));
+    const kinds = Object.keys(mon).filter(i => mon[i] > 0).length, cnt = Object.keys(mon).reduce((a, i) => a + mon[i], 0);
+    $('dxSum').textContent = `${yy}년 ${+mm}월에 얻은 ${dexNames[dxTab]} ${kinds}종 · 총 ${cnt}개 · 전체 발견 ${found.length}/${ids.length}종`;
+  }
+  $('bDex').onclick = openDex; $('dxClose').onclick = closeX;
+  $('dxPrev').onclick = () => { const ks = dexMonths(), i = ks.indexOf(dxKey); if (i > 0) { dxKey = ks[i - 1]; renderDex(); } };
+  $('dxNext').onclick = () => { const ks = dexMonths(), i = ks.indexOf(dxKey); if (i < ks.length - 1) { dxKey = ks[i + 1]; renderDex(); } };
+  document.querySelectorAll('.dtabs button').forEach(b => { b.onclick = () => { dxTab = b.dataset.k; renderDex(); }; });
+
+  // ================= 광산 몬스터 (지하 3층부터) =================
+  const MON = {
+    slime:    { name: '슬라임', hp: 6,  dmg: 8,  xp: 8,  gold: [2, 6],  speed: 700, minFloor: 3 },
+    bat:      { name: '박쥐',   hp: 5,  dmg: 10, xp: 12, gold: [3, 8],  speed: 420, minFloor: 5 },
+    skeleton: { name: '해골',   hp: 14, dmg: 16, xp: 22, gold: [6, 14], speed: 650, minFloor: 8 }
+  };
+  let monsters = [], hurtUntil = 0, invulnUntil = 0;
+  const monsterAt = (x, y) => scene === 'mine' ? (monsters.find(m => m.x === x && m.y === y) || null) : null;
+  function spawnMonsters(f) {
+    monsters = []; if (f < 3) return;
+    const R = mulberry(f * 104729 + 7), kinds = Object.keys(MON).filter(k => MON[k].minFloor <= f), free = [];
+    for (let y = 1; y < MH - 1; y++) for (let x = 9; x < MW - 1; x++) if (map[y][x] === FLOOR) free.push([x, y]);
+    const count = Math.min(10, 2 + f);
+    for (let i = 0; i < count && free.length; i++) {
+      const [x, y] = free.splice(Math.floor(R() * free.length), 1)[0], type = kinds[Math.floor(R() * kinds.length)];
+      const hp = MON[type].hp + Math.floor(f / 3);
+      monsters.push({ type, x, y, dx: x, dy: y, hp, max: hp, t: 0, atk: 0, flash: 0 });
+    }
+  }
+  function swordDmg() { return 3 + (s.up.sword ? 3 : 0) + Math.floor(s.lv / 3); }
+  function hitMonster(tx, ty) {
+    const m = monsterAt(tx, ty); if (!m) return;
+    const dmg = swordDmg(); m.hp -= dmg; m.flash = NOW + 160; debrisAt(tx, ty); pop(`-${dmg}`, tx * T + 8, ty * T);
+    if (m.hp > 0) {
+      const kx = tx + s.face[0], ky = ty + s.face[1];
+      if (inb(kx, ky) && !SOLID.has(map[ky][kx]) && !monsterAt(kx, ky) && !(s.px === kx && s.py === ky)) { m.x = kx; m.y = ky; }
+      return;
+    }
+    const M = MON[m.type]; monsters.splice(monsters.indexOf(m), 1); s.kills = (s.kills || 0) + 1;
+    const g = Math.round(rnd(M.gold[0], M.gold[1])) + floorNo; s.gold += g; sparkleAt(tx, ty); pop(`+${g}🪙`, tx * T + 8, ty * T - 6);
+    gainXp(M.xp + floorNo);
+    if (Math.random() < 0.3) { s.ore.copper++; record('ore', 'copper'); pop(`+1 ${ORES.copper.icon}`, tx * T + 8, ty * T + 6); }
+    say(`${M.name}을(를) 물리쳤어요! (+${M.xp + floorNo} XP)`); save();
+  }
+  function faint() {
+    anim = null; const loss = Math.min(100, Math.floor(s.gold * 0.1));
+    switchScene('farm'); s.px = 8; s.py = 10; rx = s.px; ry = s.py; s.tool = 0; s.gold -= loss; s.hp = Math.ceil(maxHp() / 2);
+    say(`몬스터에게 쓰러졌어요… 집 앞에서 깨어났어요${loss ? ` (-${loss}🪙)` : ''}`, 3200); save();
+  }
+  function hurtPlayer(m) {
+    if (NOW < invulnUntil) return;
+    const dmg = MON[m.type].dmg; s.hp -= dmg; invulnUntil = NOW + 700; hurtUntil = NOW + 300;
+    pop(`-${dmg}`, s.px * T + 8, s.py * T - 8); debrisAt(s.px, s.py);
+    if (s.hp <= 0) faint();
+  }
+  function updateMonsters(now, dt) {
+    if (scene !== 'mine') { if (s.hp < maxHp()) s.hp = Math.min(maxHp(), s.hp + dt * 8); return; }
+    if (scene !== 'mine' || shopOpen || bagOpen || xOpen || fade) return;
+    const k = Math.min(1, dt * 10);
+    for (const m of monsters.slice()) {
+      m.dx += (m.x - m.dx) * k; m.dy += (m.y - m.dy) * k;
+      const ddx = s.px - m.x, ddy = s.py - m.y, dist = Math.abs(ddx) + Math.abs(ddy);
+      if (dist <= 1) { if (now >= m.atk) { m.atk = now + 1000; hurtPlayer(m); } continue; }
+      if (now < m.t) continue;
+      m.t = now + MON[m.type].speed + rnd(0, 200);
+      let steps = [];
+      if (dist <= 9) steps = Math.abs(ddx) >= Math.abs(ddy) ? [[Math.sign(ddx), 0], [0, Math.sign(ddy)]] : [[0, Math.sign(ddy)], [Math.sign(ddx), 0]];
+      else if (Math.random() < 0.4) steps = [[[1, 0], [-1, 0], [0, 1], [0, -1]][(Math.random() * 4) | 0]];
+      for (const [sx, sy] of steps) {
+        if (!sx && !sy) continue;
+        const nx = m.x + sx, ny = m.y + sy;
+        if (inb(nx, ny) && !SOLID.has(map[ny][nx]) && !monsterAt(nx, ny) && !(s.px === nx && s.py === ny)) { m.x = nx; m.y = ny; break; }
+      }
+    }
+  }
+  function drawMon(type, X, Y, f, fl) {
+    if (type === 'slime') {
+      const c = fl ? '#ffffff' : '#6fd06a', d = fl ? '#dddddd' : '#4aa84a', w = f ? 1 : 0;
+      rect(d, X + 2 - w, Y + 10, 12 + 2 * w, 4); rect(c, X + 3 - w, Y + 8, 10 + 2 * w, 5); rect(c, X + 4, Y + 6 + w, 8, 3); rect(c, X + 6, Y + 5 + w, 4, 2);
+      rect('#b8f5b0', X + 5, Y + 7 + w, 2, 1); rect('#222222', X + 5, Y + 10, 1, 2); rect('#222222', X + 10, Y + 10, 1, 2);
+    } else if (type === 'bat') {
+      const c = fl ? '#ffffff' : '#5a3a7a', w = fl ? '#eeeeee' : '#7a52a0', y = f ? 3 : 6;
+      rect(w, X + 1, Y + y, 5, 3); rect(w, X + 10, Y + y, 5, 3); rect(w, X + 3, Y + y + 2, 3, 2); rect(w, X + 10, Y + y + 2, 3, 2);
+      rect(c, X + 6, Y + 5, 4, 6); rect(c, X + 6, Y + 4, 1, 1); rect(c, X + 9, Y + 4, 1, 1);
+      rect('#ff5050', X + 6, Y + 7, 1, 1); rect('#ff5050', X + 9, Y + 7, 1, 1); rect('#ffffff', X + 7, Y + 10, 2, 1);
+    } else {
+      const c = fl ? '#ffffff' : '#e8e8e0', d = fl ? '#dddddd' : '#b8b8b0';
+      rect(c, X + 5, Y + 1, 6, 5); rect(c, X + 6, Y + 6, 4, 1); rect('#222222', X + 6, Y + 3, 2, 2); rect('#222222', X + 9, Y + 3, 1, 2); rect('#222222', X + 7, Y + 6, 2, 1);
+      rect(c, X + 5, Y + 8, 6, 1); rect(c, X + 5, Y + 10, 6, 1); rect(d, X + 7, Y + 7, 2, 5);
+      rect(c, X + 3, Y + 8, 2, 4); rect(c, X + 11, Y + 8, 2, 4); rect(c, X + 5 + (f ? 1 : 0), Y + 12, 2, 3); rect(c, X + 9 - (f ? 1 : 0), Y + 12, 2, 3);
+    }
+  }
+  function drawMonsters(now) {
+    for (const m of monsters) {
+      const X = Math.round(m.dx * T), Y = Math.round(m.dy * T), f = Math.floor(now / 250) % 2;
+      rect('rgba(0,0,0,.25)', X + 3, Y + 14, 10, 2);
+      drawMon(m.type, X, Y, f, now < m.flash);
+      if (m.hp < m.max) { rect('#2b1d14', X + 2, Y - 3, 12, 3); rect('#e0584a', X + 3, Y - 2, Math.max(1, Math.round(10 * m.hp / m.max)), 1); }
+    }
+  }
+
+  // ================= 에너지 =================
+  const maxEn = () => 100 + (s.lv - 1) * 5;
+  const ENERGY_COST = { hoe: 2, water: 1, seed: 1, sickle: 2, pick: 2, axe: 3 };
+  const eatGain = (kind, id) => kind === 'crop' ? Math.max(8, Math.round(CROPS[id].sell / 5)) : Math.max(6, Math.round(FISH.find(f => f.id === id).price / 6));
+  function eat(kind, id) {
+    const st = kind === 'crop' ? s.harvest : s.fish; if (!(st[id] > 0)) return;
+    st[id]--; const g = eatGain(kind, id); s.en = Math.min(maxEn(), s.en + g);
+    say(`🍽️ 맛있게 먹었어요! 에너지 +${g}`); save(); closeBag(); openBag();
+  }
+
+  // ================= 집 안 =================
+  const RW = 12, RH = 9, BED_WAKE = [3, 3];
+  const houseMap = Array.from({ length: RH }, (_, y) => Array.from({ length: RW }, (_, x) => {
+    if (y === RH - 1) return (x === 5 || x === 6) ? HEXIT : HWALL;
+    if (y <= 1 || x === 0 || x === RW - 1) return HWALL;
+    return HFLOOR;
+  }));
+  [[1, 2, BED], [2, 2, BED], [1, 3, BED], [2, 3, BED], [4, 1, SHELF], [5, 1, SHELF], [7, 1, MIRROR], [9, 1, KITCHEN], [10, 1, KITCHEN], [6, 4, TABLE], [7, 4, TABLE], [6, 5, TABLE], [7, 5, TABLE]]
+    .forEach(([x, y, t]) => { houseMap[y][x] = t; });
+  for (let y = 6; y <= 7; y++) for (let x = 4; x <= 7; x++) houseMap[y][x] = RUG;
+  function openBed() {
+    openX('bed');
+    $('bedText').textContent = s.time < 1080 ? '아직 해가 떠 있어요. 지금 자면 하루가 바로 넘어가요.' : '푹 자면 에너지가 가득 차요.\n00:30까지 눕지 않으면 기절해서 다음 날 오전 10시에 깨어나요!';
+    $('bedText').style.whiteSpace = 'pre-line';
+  }
+  $('bedSleep').onclick = () => { closeX(); transition(() => sleep(false)); };
+  $('bedClose').onclick = closeX;
+  function actHouse(tx, ty, tile) {
+    if (tile === BED) return openBed();
+    if (tile === MIRROR) return openX('charsel');
+    if (tile === SHELF) return openDex();
+    if (tile === KITCHEN) return say('🍳 부엌이에요. 수확한 작물과 물고기는 가방(🎒)에서 먹을 수 있어요');
+    if (tile === TABLE) return say('아늑한 식탁이에요 🍽️');
+    if (tile === HWALL) return say('집 안이에요. 아래쪽 문으로 나갈 수 있어요 🚪');
+  }
+  function drawHouseTile(x, y, t) {
+    const X = x * T, Y = y * T;
+    if (t === HWALL) {
+      rect(y === 0 ? '#cdb287' : '#e2cba0', X, Y, T, T);
+      if (y === 1) rect('#8a5a2e', X, Y + 13, T, 3);
+      if (y === RH - 1) { rect('#cdb287', X, Y, T, T); rect('#8a5a2e', X, Y, T, 3); }
+      if (x === 0) rect('#b99c70', X + 12, Y, 4, T);
+      if (x === RW - 1) rect('#b99c70', X, Y, 4, T);
+      rect('rgba(0,0,0,.05)', X + ((x * 5) % 12), Y + 4, 3, 1);
+      return;
+    }
+    rect((x + y) % 2 ? '#c58d56' : '#bf8650', X, Y, T, T); rect('#a8723f', X, Y + 7, T, 1); rect('#a8723f', X + 8 * ((x + y) % 2), Y, 1, 7);
+    if (t === HEXIT) { rect('#8a5a2e', X, Y, T, 2); rect('#9a3b30', X + 1, Y + 4, 14, 9); rect('#c0574a', X + 2, Y + 5, 12, 7); rect('#e8a08a', X + 7, Y + 8, 2, 1); }
+    if (t === RUG) {
+      rect('#b5483c', X, Y, T, T); rect('#e8a08a', X + 7, Y + 7, 2, 2); rect('#d9755f', X + 3, Y + 3, 2, 2); rect('#d9755f', X + 11, Y + 11, 2, 2);
+      const R = (xx, yy) => map[yy] && map[yy][xx] === RUG;
+      if (!R(x - 1, y)) rect('#7a2a24', X, Y, 2, T); if (!R(x + 1, y)) rect('#7a2a24', X + 14, Y, 2, T);
+      if (!R(x, y - 1)) rect('#7a2a24', X, Y, T, 2); if (!R(x, y + 1)) rect('#7a2a24', X, Y + 14, T, 2);
+    }
+  }
+  function drawHouseObjects(now) {
+    [[2, 0], [9, 0]].forEach(([x, y]) => {
+      const X = x * T, Y = y * T; rect('#8a5a2e', X, Y + 1, 16, 14); rect('#bfe3f5', X + 2, Y + 3, 12, 10); rect('#8a5a2e', X + 7, Y + 3, 2, 10); rect('#8a5a2e', X + 2, Y + 7, 12, 1); rect('#ffffff', X + 3, Y + 4, 3, 2);
+    });
+    let X = 1 * T, Y = 2 * T;                                  // 침대
+    rect('rgba(0,0,0,.15)', X + 1, Y + 30, 32, 3); rect('#6b4226', X, Y, 32, 32); rect('#8a5a34', X + 1, Y + 1, 30, 4);
+    rect('#f5f1e8', X + 3, Y + 6, 12, 7); rect('#e0d8cc', X + 3, Y + 12, 12, 1); rect('#f5f1e8', X + 17, Y + 6, 12, 7); rect('#e0d8cc', X + 17, Y + 12, 12, 1);
+    rect('#5a7ac0', X + 2, Y + 14, 28, 16); rect('#7a96d4', X + 2, Y + 14, 28, 3); rect('#4a68a8', X + 2, Y + 27, 28, 3);
+    rect('#a8bce8', X + 8, Y + 17, 2, 10); rect('#a8bce8', X + 16, Y + 17, 2, 10); rect('#a8bce8', X + 24, Y + 17, 2, 10);
+    X = 4 * T; Y = 1 * T;                                      // 책장
+    rect('#7a4a24', X, Y - 6, 32, 22); rect('#3a2616', X + 2, Y - 4, 28, 18); rect('#7a4a24', X + 2, Y + 4, 28, 2);
+    const bc = ['#c8362f', '#4a68a8', '#6fae5a', '#e0a93f', '#7a3fb0', '#2f8a8a'];
+    for (let i = 0; i < 9; i++) { rect(bc[i % 6], X + 3 + i * 3, Y - 3, 2, 7 - (i % 3)); rect(bc[(i + 2) % 6], X + 3 + i * 3, Y + 7, 2, 6 - (i % 2)); }
+    X = 7 * T; Y = 1 * T;                                      // 거울
+    rect('#7a4a24', X + 1, Y - 8, 14, 22); rect('#bfe0f0', X + 3, Y - 6, 10, 18); rect('#ffffff', X + 4, Y - 5, 2, 6); rect('#e8f6fc', X + 9, Y + 4, 2, 4);
+    X = 9 * T; Y = 1 * T;                                      // 부엌
+    rect('#9a6a3f', X, Y - 2, 32, 18); rect('#d6a064', X, Y - 4, 32, 4); rect('#7a4a24', X + 2, Y + 2, 13, 12); rect('#7a4a24', X + 17, Y + 2, 13, 12);
+    rect('#ffd25e', X + 12, Y + 7, 2, 2); rect('#ffd25e', X + 18, Y + 7, 2, 2);
+    rect('#555555', X + 20, Y - 8, 10, 4); rect('#777777', X + 21, Y - 11, 8, 4); rect('#999999', X + 21, Y - 11, 8, 1);
+    if (Math.floor(now / 500) % 2) rect('rgba(255,255,255,.6)', X + 24, Y - 14, 2, 2);
+    X = 6 * T; Y = 4 * T;                                      // 식탁
+    rect('rgba(0,0,0,.15)', X + 2, Y + 28, 30, 3); rect('#8f5c2d', X + 4, Y + 12, 3, 16); rect('#8f5c2d', X + 25, Y + 12, 3, 16);
+    rect('#d6a064', X + 1, Y + 6, 30, 10); rect('#b97c42', X + 1, Y + 14, 30, 3);
+    rect('#5aa0c8', X + 13, Y + 1, 6, 6); rect('#e8344a', X + 13, Y - 2, 2, 3); rect('#ffd25e', X + 17, Y - 2, 2, 3); rect('#4aa84a', X + 15, Y - 1, 2, 2);
+    rect('#ffffff', X + 4, Y + 8, 6, 3); rect('#ffffff', X + 22, Y + 8, 6, 3);
+  }
+
+  // ================= 마을회관 안 =================
+  const hallMap = Array.from({ length: RH }, (_, y) => Array.from({ length: RW }, (_, x) => {
+    if (y === RH - 1) return (x === 5 || x === 6) ? HEXIT : HWALL;
+    if (y <= 1 || x === 0 || x === RW - 1) return HWALL;
+    return HFLOOR;
+  }));
+  [[2, 2, COUNTER], [3, 2, COUNTER], [4, 2, COUNTER], [7, 2, WORKBENCH], [8, 2, WORKBENCH], [9, 2, WORKBENCH], [6, 1, BOARD], [1, 2, PLANT], [10, 2, PLANT]].forEach(([x, y, t]) => { hallMap[y][x] = t; });
+  for (let y = 5; y <= 6; y++) for (let x = 4; x <= 7; x++) hallMap[y][x] = RUG;
+  function actHall(tx, ty, tile) {
+    if (tile === WORKBENCH) return openCraft();
+    if (tile === COUNTER) return say('📋 안내원: "제작대는 오른쪽에 있어요. 장작과 돌을 모아 오세요!"', 3400);
+    if (tile === BOARD) return say('📌 게시판: "나무는 도끼로, 돌은 곡괭이로! 만든 장식은 망치(8번)로 놓아요"', 3800);
+    if (tile === PLANT) return say('잘 자란 화분이에요 🪴');
+    if (tile === HWALL) return say('마을회관 안이에요. 아래쪽 문으로 나갈 수 있어요 🚪');
+  }
+  function drawHallObjects(now) {
+    [[2, 0], [9, 0]].forEach(([x, y]) => {
+      const X = x * T, Y = y * T; rect('#8a5a2e', X, Y + 1, 16, 14); rect('#bfe3f5', X + 2, Y + 3, 12, 10); rect('#8a5a2e', X + 7, Y + 3, 2, 10); rect('#8a5a2e', X + 2, Y + 7, 12, 1); rect('#ffffff', X + 3, Y + 4, 3, 2);
+    });
+    rect('#8a3a30', 4 * T + 4, 2, 56, 12); rect('#ffd25e', 4 * T + 4, 2, 56, 1); rect('#ffd25e', 4 * T + 4, 13, 56, 1);
+    ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#ffd25e'; ctx.fillText('마을회관', 5 * T + 16, 11);
+    let X = 3 * T, Y = 1 * T + 2;                                  // 안내원
+    rect('#5a7ac0', X + 3, Y + 8, 10, 8); rect('#f7dcc8', X + 4, Y + 1, 8, 7); rect('#3f6fb5', X + 3, Y - 1, 10, 3); rect('#222222', X + 5, Y + 4, 2, 1); rect('#222222', X + 9, Y + 4, 2, 1); rect('#c0392f', X + 6, Y + 6, 4, 1);
+    X = 2 * T; Y = 2 * T;                                          // 접수 카운터
+    rect('rgba(0,0,0,.15)', X, Y + 15, 49, 2); rect('#6b4226', X, Y + 2, 48, 14); rect('#d6a064', X - 1, Y, 50, 4); rect('#8f5c2d', X + 2, Y + 6, 13, 8); rect('#8f5c2d', X + 17, Y + 6, 13, 8); rect('#8f5c2d', X + 32, Y + 6, 14, 8);
+    rect('#ffd25e', X + 36, Y - 2, 3, 3); rect('#ffffff', X + 6, Y - 1, 8, 3); rect('#e0d8cc', X + 8, Y, 8, 2);
+    const bench = anim && anim.type === 'craft', ph = bench ? (((now - anim.t0) / anim.dur) * 3) % 1 : 0, sh = bench && ph > 0.56 && ph < 0.75 ? 1 : 0;
+    X = 7 * T; Y = 2 * T + sh;                                     // 제작대
+    rect('rgba(0,0,0,.15)', X, Y + 15, 49, 2); rect('#8f5c2d', X + 2, Y + 8, 4, 8); rect('#8f5c2d', X + 42, Y + 8, 4, 8);
+    rect('#d6a064', X, Y + 1, 48, 3); rect('#b97c42', X, Y + 3, 48, 6); rect('#8f5c2d', X + 1, Y + 9, 46, 6); rect('#6b4226', X + 4, Y + 11, 18, 3); rect('#6b4226', X + 26, Y + 11, 18, 3); rect('#ffd25e', X + 12, Y + 12, 2, 1); rect('#ffd25e', X + 34, Y + 12, 2, 1);
+    rect('#555555', X + 3, Y - 4, 7, 6); rect('#777777', X + 3, Y - 4, 7, 1);
+    rect('#aab1bb', X + 14, Y - 2, 14, 3); rect('#8a5a2e', X + 28, Y - 2, 4, 3); rect('#aab1bb', X + 15, Y + 1, 12, 1);
+    rect('#c9925a', X + 34, Y - 2, 11, 3); rect('#a8723f', X + 35, Y - 5, 10, 3); rect('#c9925a', X + 36, Y - 8, 8, 3);
+    if (!bench) { rect('#666d79', X + 22, Y - 4, 7, 3); rect('#8a5a2e', X + 24, Y - 1, 3, 2); }
+    X = 6 * T; Y = 1 * T;                                          // 게시판
+    rect('#7a4a24', X + 1, Y + 1, 14, 14); rect('#d6a064', X + 2, Y + 2, 12, 12); rect('#fffbe8', X + 3, Y + 3, 5, 5); rect('#cfe9f7', X + 9, Y + 4, 4, 4); rect('#ffe08a', X + 4, Y + 9, 6, 4); rect('#e0584a', X + 5, Y + 3, 1, 1); rect('#e0584a', X + 10, Y + 4, 1, 1);
+    [[1, 2], [10, 2]].forEach(([px, py]) => { const PX = px * T, PY = py * T; rect('#b8683c', PX + 4, PY + 10, 8, 5); rect('#b8683c', PX + 3, PY + 9, 10, 2); rect('#3f9a45', PX + 3, PY + 2, 10, 8); rect('#5cb85a', PX + 5, PY + 3, 4, 3); rect('#2f7a3a', PX + 9, PY + 6, 4, 3); });
+  }
+
+  // ================= 제작 / 꾸미기 / 배 =================
+  const RECIPES = [
+    { id: 'plank', name: '나무 길', icon: '🟫', cost: { wood: 1 }, desc: '걸어 다닐 수 있는 나무 바닥이에요', walk: true },
+    { id: 'fence', name: '나무 울타리', icon: '🪵', cost: { wood: 2 }, desc: '밭과 정원을 꾸며요' },
+    { id: 'sign', name: '표지판', icon: '🪧', cost: { wood: 3 }, desc: '길을 안내하는 표지판이에요' },
+    { id: 'pot', name: '꽃 화분', icon: '🌷', cost: { wood: 2, stone: 3 }, desc: '알록달록 꽃이 핀 화분이에요' },
+    { id: 'bench', name: '나무 벤치', icon: '🪑', cost: { wood: 6 }, desc: '쉬어 가는 벤치예요' },
+    { id: 'camp', name: '모닥불', icon: '🔥', cost: { wood: 5, stone: 4 }, desc: '밤에 따뜻한 불빛을 비춰요', light: true },
+    { id: 'lamp', name: '정원 등', icon: '💡', cost: { wood: 3, copper: 2 }, desc: '밤에 길을 밝혀요', light: true },
+    { id: 'scare', name: '허수아비', icon: '🧑‍🌾', cost: { wood: 8, stone: 2 }, desc: '밭을 지켜 주는 허수아비예요' },
+    { id: 'boat', name: '나룻배', icon: '🚣', cost: { wood: 25, stone: 5 }, desc: '바다·강·호수를 노 저어 다녀요. 바다 섬에는 보물 상자가!', boat: true }
+  ];
+  const RECIPE = Object.fromEntries(RECIPES.map(r => [r.id, r]));
+  const costText = r => Object.keys(r.cost).map(k => `${ORES[k].icon}${s.ore[k] || 0}/${r.cost[k]}`).join(' ');
+  const canCraft = r => !(r.boat && s.boat) && Object.keys(r.cost).every(k => (s.ore[k] || 0) >= r.cost[k]);
+  function openCraft() { if (locked() || fishing || scene !== 'hall') return; openX('craft'); renderCraft(); }
+  function renderCraft() {
+    $('crMat').textContent = `${ORES.wood.icon}${s.ore.wood || 0}  ${ORES.stone.icon}${s.ore.stone || 0}  ${ORES.copper.icon}${s.ore.copper || 0}`;
+    const l = $('crList'); l.innerHTML = '';
+    RECIPES.forEach(r => row(l, r.icon, r.name + (r.boat && s.boat ? ' (보유 중)' : s.crafted[r.id] ? ` (보유 ${s.crafted[r.id]})` : ''), `${r.desc} · ${costText(r)}`, [[r.boat && s.boat ? '보유 중' : '만들기', 0, () => craft(r), !canCraft(r)]]));
+  }
+  function craft(r) {
+    if (!canCraft(r)) return say('재료가 부족해요');
+    for (const k in r.cost) s.ore[k] -= r.cost[k];
+    closeX();
+    const dur = r.boat ? 3400 : r.light || r.id === 'scare' ? 2200 : 1700;
+    startAnim('craft', dur, 0.985, () => finishCraft(r));
+  }
+  function finishCraft(r) {
+    if (r.boat) { s.boat = true; say('🚣 나룻배 완성! 바닷가에서 물가를 바라보고 🚣 버튼을 눌러 타요', 4200); }
+    else { s.crafted[r.id] = (s.crafted[r.id] || 0) + 1; if (!s.decorSel || !(s.crafted[s.decorSel] > 0)) s.decorSel = r.id; say(`${r.icon} ${r.name} 완성! 망치(8번)로 놓아요`, 3200); }
+    gainXp(8); sparkleAt(s.px, s.py); sparkleAt(s.px + s.face[0], s.py + s.face[1]); pop(`${r.icon}`, s.px * T + 8, s.py * T - 12); save();
+  }
+  function nextDecor() { const k = RECIPES.map(r => r.id).find(id => !RECIPE[id].boat && s.crafted[id] > 0); s.decorSel = k || null; }
+  function openDecorPick() {
+    const own = RECIPES.filter(r => !r.boat && s.crafted[r.id] > 0);
+    if (!own.length) return say('놓을 장식이 없어요. 마을회관 제작대에서 만들어 봐요');
+    openX('decorpick'); const l = $('dpList'); l.innerHTML = '';
+    own.forEach(r => row(l, r.icon, `${r.name} ×${s.crafted[r.id]}`, r.desc, [[s.decorSel === r.id ? '선택됨' : '선택', 0, () => { s.decorSel = r.id; closeX(); }, s.decorSel === r.id]]));
+  }
+  function actHammer(tx, ty, tile) {
+    const key = tx + ',' + ty, d = s.decor[key];
+    if (d) {
+      s.crafted[d.id] = (s.crafted[d.id] || 0) + 1; map[ty][tx] = d.under; delete s.decor[key]; if (!s.decorSel) s.decorSel = d.id;
+      dustAt(tx, ty); pop(`+1 ${RECIPE[d.id].icon}`, tx * T + 8, ty * T); say(`🔨 ${RECIPE[d.id].name}을(를) 거두었어요`); save(); return;
+    }
+    const id = s.decorSel;
+    if (!id || !(s.crafted[id] > 0)) return say('놓을 장식이 없어요. 마을회관 제작대에서 만들어 봐요');
+    if (![GRASS, SAND, PATH, COBBLE].includes(tile)) return say(terrainMsg(tile) || '여기에는 놓을 수 없어요');
+    if (entityAt(tx, ty)) return;
+    s.crafted[id]--; map[ty][tx] = RECIPE[id].walk ? DECORW : DECOR; s.decor[key] = { id, under: tile };
+    dustAt(tx, ty); gainXp(1); if (!(s.crafted[id] > 0)) nextDecor(); save();
+  }
+  function facingWater() { const tx = s.px + s.face[0], ty = s.py + s.face[1]; return inb(tx, ty) && (map[ty][tx] === POND || map[ty][tx] === SEA); }
+  function updateBoatBtn() {
+    const b = $('boatBtn'), show = !!(s.boat && scene === 'farm' && !locked() && !fishing && (s.sailing || facingWater()));
+    if (lastText.bshow !== show) { lastText.bshow = show; b.hidden = !show; }
+    const t = s.sailing ? '⚓' : '🚣'; if (lastText.btxt !== t) { lastText.btxt = t; b.textContent = t; }
+  }
+  function toggleBoat() {
+    if (!s.boat || scene !== 'farm' || locked() || fishing) return;
+    const tx = s.px + s.face[0], ty = s.py + s.face[1];
+    if (!inb(tx, ty)) return;
+    const tile = map[ty][tx], water = tile === POND || tile === SEA;
+    if (!s.sailing) {
+      if (!water) return say('물가를 바라보고 눌러요 🌊');
+      s.shore = [s.px, s.py]; s.sailing = true; s.px = tx; s.py = ty; say('🚣 출항! 노를 저어 떠나요. 내릴 땐 육지를 바라보고 ⚓ 를 눌러요', 3800);
+    } else {
+      if (water || SOLID.has(tile) || entityAt(tx, ty)) return say('내릴 수 있는 육지를 바라보고 눌러요 🏝️');
+      s.sailing = false; s.px = tx; s.py = ty; say('🏝️ 도착!');
+    }
+    save();
+  }
+  $('crClose').onclick = closeX; $('dpClose').onclick = closeX; $('boatBtn').onclick = toggleBoat;
+  $('boatBtn').addEventListener('pointerdown', e => e.preventDefault());
+  function openChest(tx, ty) {
+    const key = tx + ',' + ty;
+    if (s.chests[key] === s.day) return say('빈 상자예요. 내일 다시 와 봐요 📦');
+    s.chests[key] = s.day;
+    const r = Math.random(), g = Math.round(rnd(60, 160) + s.lv * 8); s.gold += g; let extra = '';
+    if (r < 0.4) { const n = 3 + Math.floor(Math.random() * 4); s.ore.wood += n; record('ore', 'wood', n); extra = ` +${ORES.wood.icon}${n}`; }
+    else if (r < 0.7) { const id = Math.random() < 0.5 ? 'gold' : 'iron'; s.ore[id]++; record('ore', id); extra = ` +${ORES[id].icon}1`; }
+    else { const ks = CROP_KEYS.filter(canPlant); const k = ks[Math.floor(Math.random() * ks.length)]; s.seeds[k] += 3; extra = ` +${CROPS[k].icon}씨앗 3`; }
+    sparkleAt(tx, ty); gainXp(10); say(`📦 보물 상자! +${g}🪙${extra}`, 3400); save();
+  }
+  function drawChest(x, y) {
+    const X = x * T, Y = y * T, open = s.chests && s.chests[x + ',' + y] === s.day;
+    rect('rgba(0,0,0,.2)', X + 1, Y + 13, 14, 3);
+    rect('#6b4226', X + 1, Y + 6, 14, 8); rect('#a8723f', X + 2, Y + 7, 12, 6); rect('#c9965a', X + 2, Y + 7, 12, 2); rect('#4a3320', X + 1, Y + 11, 14, 1);
+    if (open) { rect('#2b1d14', X + 2, Y + 4, 12, 3); rect('#8f5c2d', X + 1, Y + 1, 14, 3); }
+    else { rect('#8f5c2d', X + 1, Y + 3, 14, 4); rect('#c9965a', X + 1, Y + 3, 14, 1); rect('#4a3320', X + 1, Y + 6, 14, 1); rect('#ffd25e', X + 7, Y + 6, 2, 3); if (Math.floor(NOW / 500) % 2) rect('#ffffff', X + 12, Y + 2, 1, 1); }
+  }
+  function drawBoat(PX, PY, dir, now) {
+    const b = Math.round(Math.sin(now / 320));
+    if (dir === 'left' || dir === 'right') {
+      const Y = PY + 7 + b;
+      rect('rgba(0,0,0,.2)', PX - 4, Y + 9, 24, 2);
+      rect('#5a3a1c', PX - 5, Y + 1, 26, 8); rect('#8f5c2d', PX - 4, Y, 24, 8); rect('#b98448', PX - 2, Y + 1, 20, 4); rect('#6b4226', PX - 4, Y + 6, 24, 2);
+      rect('#5a3a1c', dir === 'left' ? PX - 7 : PX + 21, Y + 2, 2, 4); rect('#8f5c2d', dir === 'left' ? PX - 6 : PX + 20, Y + 1, 2, 6);
+      rect('#d6a064', PX + 1, Y + 3, 14, 1);
+    } else {
+      const Y = PY + 2 + b;
+      rect('rgba(0,0,0,.2)', PX - 1, Y + 17, 18, 2);
+      rect('#5a3a1c', PX - 1, Y, 18, 18); rect('#8f5c2d', PX, Y + 1, 16, 15); rect('#b98448', PX + 2, Y + 3, 12, 11); rect('#6b4226', PX, Y + 14, 16, 2);
+      rect('#8f5c2d', PX + 4, dir === 'up' ? Y - 2 : Y + 17, 8, 2);
+    }
+  }
+  function drawLights(camX, camY, vw, vh, now) {
+    if (s.time < 1000) return;
+    const a = Math.min(1, (s.time - 1000) / 200);
+    for (const k in s.decor) {
+      const d = s.decor[k]; if (!RECIPE[d.id].light) continue;
+      const [x, y] = k.split(',').map(Number), sx = x * T + 8 - camX, sy = y * T + 8 - camY;
+      if (sx < -50 || sy < -50 || sx > vw + 50 || sy > vh + 50) continue;
+      const r = 34 + Math.sin(now / 150 + x) * 2, g = ctx.createRadialGradient(sx, sy, 2, sx, sy, r);
+      g.addColorStop(0, `rgba(255,200,110,${0.5 * a})`); g.addColorStop(1, 'rgba(255,200,110,0)'); ctx.fillStyle = g; ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+    }
+  }
+  const DECOR_ART = {
+    plank: (X, Y) => { for (let i = 0; i < 4; i++) { rect(i % 2 ? '#b98448' : '#c9965a', X, Y + i * 4, 16, 3); rect('#8f5c2d', X, Y + i * 4 + 3, 16, 1); } rect('#7a4a24', X + 2, Y, 1, 16); rect('#7a4a24', X + 13, Y, 1, 16); },
+    fence: (X, Y, x, y) => {
+      const F = (xx, yy) => { const d = s.decor[xx + ',' + yy]; return !!(d && d.id === 'fence'); };
+      if (F(x - 1, y)) { rect('#b98448', X, Y + 6, 6, 2); rect('#b98448', X, Y + 10, 6, 2); }
+      if (F(x + 1, y)) { rect('#b98448', X + 10, Y + 6, 6, 2); rect('#b98448', X + 10, Y + 10, 6, 2); }
+      if (F(x, y - 1)) rect('#b98448', X + 7, Y, 2, 4); if (F(x, y + 1)) rect('#b98448', X + 7, Y + 12, 2, 4);
+      rect('#7a4a24', X + 6, Y + 3, 4, 11); rect('#a8723f', X + 6, Y + 3, 4, 1); rect('#5a3a1c', X + 9, Y + 4, 1, 10);
+    },
+    sign: (X, Y) => { rect('#7a4a24', X + 7, Y + 6, 2, 9); rect('#d6a064', X + 2, Y + 2, 12, 6); rect('#8f5c2d', X + 2, Y + 2, 12, 1); rect('#8f5c2d', X + 2, Y + 7, 12, 1); rect('#4a3320', X + 4, Y + 4, 6, 1); rect('#4a3320', X + 4, Y + 6, 4, 1); },
+    pot: (X, Y, x, y) => {
+      const h = hsh(x, y, 5), cs = ['#ff7a9a', '#ffd25e', '#a8c8ff', '#ffffff', '#e8446a'];
+      rect('rgba(0,0,0,.18)', X + 3, Y + 14, 10, 2); rect('#b8683c', X + 4, Y + 9, 8, 5); rect('#b8683c', X + 3, Y + 8, 10, 2); rect('#8a4a28', X + 4, Y + 12, 8, 2); rect('#5a3a1c', X + 4, Y + 8, 8, 1);
+      rect('#4aa84a', X + 5, Y + 4, 1, 5); rect('#4aa84a', X + 8, Y + 3, 1, 6); rect('#4aa84a', X + 11, Y + 5, 1, 4);
+      rect(cs[h % 5], X + 4, Y + 2, 3, 3); rect(cs[(h >> 3) % 5], X + 7, Y + 1, 3, 3); rect(cs[(h >> 6) % 5], X + 10, Y + 3, 3, 3);
+    },
+    bench: (X, Y, x, y, now) => drawDeco({ style: 'bench' }, X, Y, 16, 16, s.time > 1020, now),
+    lamp: (X, Y, x, y, now) => drawDeco({ style: 'lamp' }, X, Y, 16, 16, s.time > 1020, now),
+    camp: (X, Y, x, y, now) => {
+      const f = Math.floor(now / 120) % 3;
+      rect('#8a8a92', X + 1, Y + 11, 3, 3); rect('#8a8a92', X + 12, Y + 11, 3, 3); rect('#6e6e78', X + 5, Y + 13, 6, 2);
+      rect('#5a3a1c', X + 2, Y + 11, 12, 3); rect('#7a4a24', X + 3, Y + 9, 10, 3);
+      rect('#ff7a1a', X + 5, Y + 4 - (f % 2), 6, 6); rect('#ffb030', X + 6, Y + 5 - (f % 2), 4, 5); rect('#fff0a0', X + 7, Y + 7, 2, 3);
+      if (f === 1) rect('#ff7a1a', X + 7, Y + 2, 2, 2);
+    },
+    scare: (X, Y) => {
+      rect('rgba(0,0,0,.18)', X + 3, Y + 14, 10, 2); rect('#7a4a24', X + 7, Y + 2, 2, 13); rect('#7a4a24', X + 1, Y + 6, 14, 2);
+      rect('#c0502f', X + 5, Y + 5, 6, 6); rect('#e8c668', X + 5, Y - 1, 6, 5); rect('#8a5a2e', X + 3, Y - 2, 10, 2); rect('#8a5a2e', X + 5, Y - 4, 6, 2);
+      rect('#2b1d14', X + 6, Y + 1, 1, 1); rect('#2b1d14', X + 9, Y + 1, 1, 1); rect('#e8c668', X, Y + 7, 2, 3); rect('#e8c668', X + 14, Y + 7, 2, 3);
+    }
+  };
+  function drawDecorTile(x, y, now) {
+    const d = s.decor[x + ',' + y];
+    if (!d) { drawGrass(x, y); return; }
+    if (d.under === PATH) drawPath(x, y); else if (d.under === SAND) drawSand(x, y); else if (d.under === COBBLE) drawCobble(x, y); else drawGrass(x, y);
+    DECOR_ART[d.id](x * T, y * T, x, y, now);
+  }
+
+  // ================= 큰 나무 / 나무 베기 =================
+  const treeHp = {}; let treeShake = null; const TREE_HP = 3;
+  function chipsAt(x, y, many) {
+    const cx = x * T + 8, cy = y * T + 8, wood = ['#a8723f', '#7a4a24', '#c9925a'], lc = TP ? [TP[0], TP[1], TP[3] || TP[0]] : ['#f4f8fb', '#2f6a47', '#dfe8f0'];
+    for (let i = 0; i < 6; i++) spawn(cx + rnd(-3, 3), cy + rnd(-2, 4), rnd(-50, 50), rnd(-90, -30), rnd(.3, .5), wood[i % 3], i % 3 === 0 ? 2 : 1, 330);
+    for (let i = 0; i < (many ? 16 : 5); i++) spawn(cx + rnd(-14, 14), cy - rnd(8, 26), rnd(-25, 25), rnd(10, 45), rnd(.6, 1.1), lc[i % 3], 2, 70);
+  }
+  function chopAt(tx, ty) {
+    if (map[ty][tx] !== TREE) return;
+    const key = tx + ',' + ty, dmg = s.up.axe ? 2 : 1;
+    treeHp[key] = (treeHp[key] !== undefined ? treeHp[key] : TREE_HP) - dmg;
+    treeShake = { key, until: NOW + 280 };
+    if (treeHp[key] > 0) { chipsAt(tx, ty, false); return; }
+    delete treeHp[key]; map[ty][tx] = GRASS; s.chopped[key] = s.day;
+    const n = 2 + Math.floor(Math.random() * 3); s.ore.wood = (s.ore.wood || 0) + n; record('ore', 'wood', n); gainXp(6);
+    chipsAt(tx, ty, true); pop(`+${n} ${ORES.wood.icon}`, tx * T + 8, ty * T - 6); say(`🪓 나무를 베었어요! 장작 +${n}`); save();
+  }
+  function regrowTrees() {
+    for (const k in s.chopped) {
+      if (s.day - s.chopped[k] < 6) continue;
+      const [x, y] = k.split(',').map(Number);
+      if (farmMap[y] && farmMap[y][x] === GRASS && !(s.px === x && s.py === y) && !entityAt(x, y)) { farmMap[y][x] = TREE; delete s.chopped[k]; }
+    }
+  }
+  function drawBigTree(x, y) {
+    const X = x * T, Y = y * T, cx = X + 8, h = hsh(x, y, 31), key = x + ',' + y;
+    const sh = treeShake && treeShake.key === key && NOW < treeShake.until ? (Math.floor(NOW / 40) % 2 ? 1 : -1) : 0, ox = cx + sh;
+    rect('rgba(0,0,0,.18)', X - 7, Y + 12, 30, 4); rect('rgba(0,0,0,.12)', X - 4, Y + 14, 24, 2);
+    rect('#6b4a2b', cx - 3, Y + 2, 6, 13); rect('#4f3520', cx + 1, Y + 2, 2, 13); rect('#6b4a2b', cx - 5, Y + 13, 10, 2); rect('#8a6038', cx - 3, Y + 4, 1, 6);
+    if (!TP) {   // 겨울: 눈 덮인 큰 소나무
+      for (let i = 0; i < 4; i++) {
+        const w = 10 + i * 7, yy = Y - 24 + i * 8;
+        rect('#2f6a47', ox - (w >> 1), yy, w, 9); rect('#245a3a', ox - (w >> 1), yy + 6, w, 3);
+        rect('#f4f8fb', ox - (w >> 1) + 1, yy, w - 2, 2); rect('#dfe8f0', ox - (w >> 1) + 2, yy + 2, w - 5, 1);
+        rect('#f4f8fb', ox - (w >> 1), yy + 8, 3, 1); rect('#f4f8fb', ox + (w >> 1) - 3, yy + 8, 3, 1);
+      }
+      return;
+    }
+    const v = h % 10;
+    if (v <= 2) {   // 짙은 초록 소나무
+      for (let i = 0; i < 4; i++) {
+        const w = 10 + i * 7, yy = Y - 24 + i * 8;
+        rect('#2a6a3c', ox - (w >> 1), yy, w, 9); rect('#1f5530', ox - (w >> 1), yy + 6, w, 3);
+        rect('#3f8a50', ox - (w >> 1) + 1, yy + 1, (w >> 1) - 1, 2); rect('#4a9a5a', ox - (w >> 1) + 2, yy + 3, 3, 1);
+        rect('#1f5530', ox + (w >> 1) - 2, yy + 1, 2, 7);
+      }
+      return;
+    }
+    const PP = (SEASON === 'spring' && v === 3) ? ['#f2a0c0', '#fbd0e2', '#d77aa0', '#ffffff'] : TP, a = h % 5;
+    rect(PP[2], ox - 14, Y - 4, 28, 8); rect(PP[0], ox - 15, Y - 11, 30, 10); rect(PP[0], ox - 12, Y - 18, 24, 9); rect(PP[0], ox - 8, Y - 23, 16, 7);
+    rect(PP[2], ox - 15, Y - 11, 2, 2); rect(PP[2], ox + 13, Y - 11, 2, 2); rect(PP[2], ox - 12, Y - 18, 2, 2); rect(PP[2], ox + 10, Y - 18, 2, 2);
+    rect(PP[1], ox - 11 + a, Y - 17, 8, 4); rect(PP[1], ox - 4, Y - 22, 6, 3); rect(PP[1], ox + 3, Y - 13 + (a >> 1), 7, 4); rect(PP[1], ox - 13, Y - 9, 6, 3);
+    rect(PP[2], ox + 6, Y - 9, 8, 4); rect(PP[2], ox - 14, Y - 2, 10, 3); rect(PP[2], ox + 2, Y - 2, 12, 3); rect(PP[2], ox - 3 - a, Y - 12, 6, 3);
+    if (PP[3]) for (let i = 0; i < 7; i++) rect(PP[3], ox - 12 + ((h >> (i + 1)) % 24), Y - 20 + ((h >> (i + 3)) % 18), 2, 2);
+    else if (SEASON === 'autumn') for (let i = 0; i < 6; i++) rect('#c0451f', ox - 12 + ((h >> (i + 1)) % 24), Y - 20 + ((h >> (i + 3)) % 18), 2, 2);
+  }
+  function drawTrees(front, x0, x1, y0, y1) {
+    const py = Math.round(ry);
+    for (let y = y0; y <= Math.min(H - 1, y1 + 3); y++) for (let x = Math.max(0, x0 - 2); x <= Math.min(W - 1, x1 + 2); x++) {
+      if (map[y][x] === TREE && (y > py) === front) drawBigTree(x, y);
+    }
   }
 
   // ================= 게임 로직 =================
@@ -925,15 +1571,19 @@
 
   function sleep(passedOut) {
     anim = null; fishing = null;
-    if (scene === 'mine') { switchScene('farm'); s.px = 8; s.py = 10; rx = s.px; ry = s.py; s.tool = 0; }
+    if (scene !== 'house') switchScene('house');
+    s.px = BED_WAKE[0]; s.py = BED_WAKE[1]; s.face = [0, 1]; rx = s.px; ry = s.py; s.tool = 0;
     for (const k in plants) {
       const p = plants[k];
       if (p.watered && !ripe(p) && CROPS[p.type].seasons.includes(SEASON)) p.age++;
       p.watered = false;
     }
-    const hungry = animalsNight();
-    s.day++; s.time = DAY_START; ensureSeed(); save();
-    say((passedOut ? '너무 늦어서 쓰러졌어요… 새로운 아침!' : `${s.day}일차 아침이에요 ${SN[SEASON][1]}`) + (hungry ? ` · 배고픈 동물 ${hungry}마리` : ''), 2600);
+    const hungry = animalsNight(); s.hp = maxHp(); regrowTrees();
+    s.day++; s.time = passedOut ? WAKE_LATE : DAY_START; s.warned = false;
+    s.en = passedOut ? Math.ceil(maxEn() * 0.6) : maxEn();
+    const loss = passedOut ? Math.min(150, Math.floor(s.gold * 0.1)) : 0; s.gold -= loss;
+    ensureSeed(); save();
+    say((passedOut ? `기절을 해 버렸다… 눈을 떠 보니 ${s.day}일차 오전 10시. 이웃이 침대로 옮겨 줬다${loss ? ` (사례금 -${loss}🪙)` : ''}` : `${s.day}일차 아침이에요 ${SN[SEASON][1]} 에너지가 가득 찼어요`) + (hungry ? ` · 배고픈 동물 ${hungry}마리` : ''), 4200);
   }
   function countTillable() {
     const R = s.up.hoe ? 2 : 1; let n = 0;
@@ -941,24 +1591,25 @@
     return n;
   }
   function tillAround() {
-    const R = s.up.hoe ? 2 : 1;
-    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const x = s.px + dx, y = s.py + dy; if (inb(x, y) && map[y][x] === GRASS) { map[y][x] = SOIL; dustAt(x, y); } }
+    const R = s.up.hoe ? 2 : 1; let tilled = 0;
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const x = s.px + dx, y = s.py + dy; if (inb(x, y) && map[y][x] === GRASS) { map[y][x] = SOIL; dustAt(x, y); tilled++; } }
+    if (tilled) gainXp(Math.ceil(tilled / 3));
     save();
   }
   function waterAround(tx, ty) {
     const R = s.up.can ? 1 : 0;
-    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const x = tx + dx, y = ty + dy, p = plants[x + ',' + y]; if (inb(x, y) && p && !ripe(p)) { p.watered = true; splashAt(x, y); } }
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const x = tx + dx, y = ty + dy, p = plants[x + ',' + y]; if (inb(x, y) && p && !ripe(p)) { p.watered = true; splashAt(x, y); gainXp(1); } }
     save();
   }
   function plantAt(tx, ty, key, type) {
     if (!(s.seeds[type] > 0) || plants[key]) return;
     s.seeds[type]--; plants[key] = { type, age: 0, watered: false }; dustAt(tx, ty);
-    ensureSeed();
+    ensureSeed(); gainXp(2);
     save();
   }
   function harvestOne(key, tx, ty) {
     const p = plants[key]; if (!p || !ripe(p)) return false;
-    const c = CROPS[p.type]; delete plants[key]; s.harvest[p.type]++;
+    const c = CROPS[p.type]; delete plants[key]; s.harvest[p.type]++; record('crop', p.type); gainXp(Math.max(3, Math.round(c.sell / 10)));
     sparkleAt(tx, ty); pop(`+1 ${c.icon}`, tx * T + 8, ty * T); return true;
   }
   function countRipe(tx, ty, R) {
@@ -978,16 +1629,21 @@
     Object.keys(ORES).forEach(k => { total += s.ore[k] * ORES[k].price; n += s.ore[k]; s.ore[k] = 0; });
     Object.keys(GOODS).forEach(k => { total += s.goods[k] * GOODS[k].price; n += s.goods[k]; s.goods[k] = 0; });
     if (!n) return say('팔 물건이 없어요');
-    s.gold += total; pop(`+${total}🪙`, s.px * T + 8, s.py * T - 6); say(`${n}개를 팔아 ${total}골드를 벌었어요!`); save();
+    const bonus = Math.round(total * (priceMul() - 1)); total += bonus;
+    s.gold += total; pop(`+${total}🪙`, s.px * T + 8, s.py * T - 6); say(`${n}개를 팔아 ${total}골드를 벌었어요!${bonus ? ` (레벨 보너스 +${bonus})` : ''}`); save();
   }
   function terrainMsg(tile) {
     if (tile === POND || tile === SEA) return '물이 시원해 보여요 🌊';
     if (tile === MOUNTAIN) return '높은 산이에요 ⛰️';
-    if (tile === TREE) return '커다란 나무예요 🌳';
+    if (tile === TREE) return '커다란 나무예요. 도끼(7)로 벨 수 있어요 🪓';
     if (tile === FENCE) return '울타리예요. 아래쪽 문으로 들어가요 🪵';
+    if (tile === BUSH) return '동글동글한 덤불이에요 🌿';
+    if (tile === CLIFF) return '높은 절벽이에요. 계단으로 올라가요 🪜';
+    if (tile === DECOR) return '직접 만든 장식이에요. 망치(8)로 옮길 수 있어요 🔨';
     return '';
   }
   function actMine(tx, ty, tile) {
+    if (monsterAt(tx, ty)) return startAnim('sword', 520, 0.56, () => hitMonster(tx, ty));
     if (tile === LUP) return transition(() => { if (floorNo > 1) switchScene('mine', floorNo - 1); else { switchScene('farm'); s.tool = 0; } });
     if (tile === LDOWN) return transition(() => switchScene('mine', floorNo + 1));
     if (tile === ROCK || ORE_OF[tile]) {
@@ -1001,12 +1657,21 @@
     const tx = s.px + s.face[0], ty = s.py + s.face[1];
     if (!inb(tx, ty)) return;
     const tile = map[ty][tx];
+    if (s.sailing) {
+      if (tile === TCHEST) return openChest(tx, ty);
+      if (s.tool === 4 && (tile === POND || tile === SEA)) return startFishing(tx, ty, tile);
+      return say('배 위에서는 낚시(5번)만 할 수 있어요. 🚣 버튼으로 내려요');
+    }
     if (scene === 'mine') return actMine(tx, ty, tile);
+    if (scene === 'house') return actHouse(tx, ty, tile);
+    if (scene === 'hall') return actHall(tx, ty, tile);
     const ent = entityAt(tx, ty);
     if (ent) return ent.npc ? openDialog(ent.npc) : touchAnimal(ent);
     const key = tx + ',' + ty, p = plants[key], tool = s.tool;
 
-    if (tile === HOUSE) return sleep(false);
+    if (tile === HOUSE) return say('집 문은 가운데에 있어요. 문 앞으로 걸어가 보세요 🚪');
+    if (tile === DECO) { const d = decoAt(tx, ty); return say(d ? d.msg : ''); }
+    if (tile === TCHEST) return openChest(tx, ty);
     if (tile === BOX) return sellAll();
     if (tile === SHOP) return openShop();
     if (tile === BARN) return openBarn();
@@ -1026,6 +1691,8 @@
       if (tile === POND || tile === SEA) return startFishing(tx, ty, tile);
       return say('물가를 바라보고 낚싯대를 써요 🎣');
     }
+    if (tool === 7) return actHammer(tx, ty, tile);
+    if (tool === 6) { if (tile === TREE) return startAnim('axe', 560, 0.56, () => chopAt(tx, ty)); return say(terrainMsg(tile) || '나무를 바라보고 도끼를 휘둘러요 🪓'); }
     const msg = terrainMsg(tile); if (msg) return say(msg);
     if (tool === 1) {
       if (p) return startAnim('water', 850, 0.7, () => waterAround(tx, ty));
@@ -1107,13 +1774,13 @@
     if (locked() || fishing) return;
     bagOpen = true; bagEl.hidden = false; stickDir = null; held.clear(); setText('bGold', s.gold);
     const list = $('blist'); list.innerHTML = ''; let total = 0, n = 0;
-    CROP_KEYS.forEach(k => { const c = CROPS[k]; if (s.harvest[k]) { n++; total += s.harvest[k] * c.sell; row(list, c.icon, `${c.name} ×${s.harvest[k]}`, `개당 ${c.sell}골드`, []); } });
-    FISH.forEach(f => { if (s.fish[f.id]) { n++; total += s.fish[f.id] * f.price; row(list, f.icon, `${f.name} ×${s.fish[f.id]}`, `개당 ${f.price}골드`, []); } });
+    CROP_KEYS.forEach(k => { const c = CROPS[k]; if (s.harvest[k]) { n++; total += s.harvest[k] * c.sell; row(list, c.icon, `${c.name} ×${s.harvest[k]}`, `개당 ${c.sell}골드`, [[`먹기 ⚡+${eatGain('crop', k)}`, 0, () => eat('crop', k), s.en >= maxEn()]]); } });
+    FISH.forEach(f => { if (s.fish[f.id]) { n++; total += s.fish[f.id] * f.price; row(list, f.icon, `${f.name} ×${s.fish[f.id]}`, `개당 ${f.price}골드`, [[`먹기 ⚡+${eatGain('fish', f.id)}`, 0, () => eat('fish', f.id), s.en >= maxEn()]]); } });
     Object.keys(ORES).forEach(k => { const o = ORES[k]; if (s.ore[k]) { n++; total += s.ore[k] * o.price; row(list, o.icon, `${o.name} ×${s.ore[k]}`, `개당 ${o.price}골드`, []); } });
     Object.keys(GOODS).forEach(k => { const g = GOODS[k]; if (s.goods[k]) { n++; total += s.goods[k] * g.price; row(list, g.icon, `${g.name} ×${s.goods[k]}`, `개당 ${g.price}골드`, []); } });
     if (s.feed) row(list, '🌾', `동물 사료 ×${s.feed}`, '밤마다 동물이 먹어요', []);
     sortedCrops().forEach(k => { if (s.seeds[k]) row(list, CROPS[k].icon, `${CROPS[k].name} 씨앗 ×${s.seeds[k]}`, canPlant(k) ? '지금 심을 수 있어요' : CROPS[k].seasons.map(x => SN[x][0]).join('·') + '에 심어요', [], canPlant(k) ? '' : 'gray'); });
-    $('bsum').textContent = n ? `상자에 팔면 약 ${total}골드 · 가장 깊이 간 광산 B${s.best || 0}` : `아직 팔 물건이 없어요 · 가장 깊이 간 광산 B${s.best || 0}`;
+    $('bsum').textContent = n ? `상자에 팔면 약 ${Math.round(total * priceMul())}골드(레벨 보너스 포함) · 가장 깊이 간 광산 B${s.best || 0}` : `아직 팔 물건이 없어요 · 가장 깊이 간 광산 B${s.best || 0}`;
   }
   function closeBag() { bagOpen = false; bagEl.hidden = true; }
   $('sClose').onclick = closeShop; $('bClose').onclick = closeBag; $('bBag').onclick = () => (bagOpen ? closeBag() : openBag());
@@ -1141,7 +1808,8 @@
     if (keyMap[k]) { held.add(keyMap[k]); e.preventDefault(); }
     else if (k === ' ' || k === 'e') { if (!e.repeat) act(); e.preventDefault(); }
     else if (k === 'b') openBag();
-    else if (k >= '1' && k <= '6') selectTool(+k - 1);
+    else if (k === 'v') toggleBoat();
+    else if (k >= '1' && k <= '8') selectTool(+k - 1);
   });
   addEventListener('keyup', e => { const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; if (keyMap[k]) held.delete(keyMap[k]); });
   const stick = $('stick'), knob = $('knob');
@@ -1166,10 +1834,18 @@
     if (locked()) return;
     const d = stickDir || (held.size ? dirs[[...held].pop()] : null);
     if (fishing) { if (d && now - fishing.t0 > 250) endFishing(); return; }
-    if (!d || now - lastMove < (s.up.boots ? 95 : 140)) return;
+    if (!d || now - lastMove < (s.sailing ? 110 : s.up.boots ? 95 : 140)) return;
     s.face = d;
-    const nx = s.px + d[0], ny = s.py + d[1];
-    if (inb(nx, ny) && !SOLID.has(map[ny][nx]) && !entityAt(nx, ny)) { s.px = nx; s.py = ny; }
+    const nx = s.px + d[0], ny = s.py + d[1], nt = inb(nx, ny) ? map[ny][nx] : -1;
+    const can = s.sailing ? ((nt === POND || nt === SEA) && !entityAt(nx, ny)) : (inb(nx, ny) && !SOLID.has(nt) && !entityAt(nx, ny) && !monsterAt(nx, ny));
+    if (can) {
+      if (s.sailing) for (let i = 0; i < 3; i++) spawn(s.px * T + 8 - d[0] * 8 + rnd(-3, 3), s.py * T + 12 - d[1] * 6 + rnd(-2, 2), -d[0] * 14 + rnd(-6, 6), -d[1] * 14 + rnd(-6, 6), .5, i % 2 ? '#e9f6ff' : '#9fd6ff', 1, 0);
+      s.px = nx; s.py = ny;
+      if (scene === 'farm' && map[ny][nx] === DOOR) transition(() => switchScene('house'));
+      else if (scene === 'farm' && map[ny][nx] === HALLDOOR) transition(() => switchScene('hall'));
+      else if (scene === 'house' && map[ny][nx] === HEXIT) transition(() => switchScene('farm', 'house'));
+      else if (scene === 'hall' && map[ny][nx] === HEXIT) transition(() => switchScene('farm', 'hall'));
+    }
     lastMove = now;
   }
 
@@ -1183,10 +1859,18 @@
   function drawGrass(x, y) {
     const X = x * T, Y = y * T, h = hsh(x, y, 1);
     rect((x + y) % 2 ? GP[0] : GP[1], X, Y, T, T);
+    const pz = hsh(x >> 1, y >> 1, 12) % 6;
+    if (pz === 0) rect('rgba(0,50,0,.11)', X, Y, T, T); else if (pz === 5) rect('rgba(255,255,190,.07)', X, Y, T, T);
     if (h % 3 === 0) { rect(GP[2], X + 3 + h % 7, Y + 4 + (h >> 3) % 7, 1, 2); rect(GP[2], X + 4 + h % 7, Y + 5 + (h >> 3) % 7, 1, 1); }
+    if (h % 4 === 1) { const a = (h >> 3) % 11 + 2, b = (h >> 6) % 9 + 3; rect(GP[2], X + a, Y + b, 1, 3); rect(GP[2], X + a + 2, Y + b + 1, 1, 2); rect(GP[0], X + a + 1, Y + b - 1, 1, 1); }
     if (SEASON === 'winter') { if (h % 5 === 0) rect('#ffffff', X + (h >> 2) % 12, Y + (h >> 5) % 12, 3, 1); return; }
-    if (SEASON === 'autumn') { if (h % 6 === 0) rect(GP[3], X + (h >> 2) % 12, Y + (h >> 5) % 12, 2, 1); return; }
-    if (h % (SEASON === 'spring' ? 9 : 17) === 0) { const fx = X + 5 + (h >> 2) % 6, fy = Y + 9 + (h >> 6) % 4; rect('#fff4f0', fx, fy, 1, 1); rect(GP[3], fx + 1, fy, 1, 1); rect('#ffd25e', fx, fy + 1, 1, 1); }
+    if (SEASON === 'autumn') { if (h % 6 === 0) rect(GP[3], X + (h >> 2) % 12, Y + (h >> 5) % 12, 2, 1); if (h % 19 === 0) rect('#c0451f', X + (h >> 4) % 12, Y + (h >> 7) % 12, 2, 1); return; }
+    const fc = ['#fff4f0', '#ffd25e', '#ff9fc0', '#a8c8ff', '#ffffff'];
+    if (h % (SEASON === 'spring' ? 7 : 15) === 0) {
+      const fx = X + 3 + (h >> 2) % 9, fy = Y + 6 + (h >> 6) % 7, c = fc[(h >> 9) % 5];
+      rect(c, fx, fy, 1, 1); rect(c, fx + 2, fy + 1, 1, 1); rect(c, fx + 1, fy + 2, 1, 1); rect('#ffd25e', fx + 1, fy + 1, 1, 1);
+    }
+    if (h % 31 === 0) rect('#a8a8a8', X + (h >> 3) % 12, Y + (h >> 6) % 12, 2, 1);
   }
   function drawSoil(x, y) {
     const X = x * T, Y = y * T, pl = plants[x + ',' + y], wet = pl && pl.watered;
@@ -1230,6 +1914,142 @@
     rect('#d2bb7a', X + h % 13, Y + (h >> 4) % 13, 2, 1); rect('#d2bb7a', X + (h >> 3) % 12, Y + (h >> 6) % 12, 1, 1);
     if (h % 13 === 0) rect('#fff7f0', X + (h >> 2) % 12, Y + (h >> 5) % 12, 2, 1);
   }
+  const pathLike = (x, y) => x < 0 || y < 0 || x >= W || y >= H || [PATH, COBBLE, BRIDGE, STAIRS, DOOR, HOUSE, SHOP, BOX, BARN, CAVE, DECO].includes(map[y][x]);
+  function drawPath(x, y) {
+    const X = x * T, Y = y * T, h = hsh(x, y, 81), P = (xx, yy) => pathLike(xx, yy);
+    drawGrass(x, y);
+    rect('#e2aa3c', X, Y, T, T);
+    rect('#cf922a', X + h % 12, Y + (h >> 4) % 12, 3, 1); rect('#f0c262', X + (h >> 3) % 11, Y + (h >> 6) % 11, 2, 1); rect('#bf8420', X + (h >> 5) % 13, Y + (h >> 2) % 13, 1, 1);
+    if (h % 5 === 0) rect('#a8721a', X + (h >> 7) % 12, Y + (h >> 3) % 12, 2, 1);
+    if (!P(x - 1, y)) rect('#b98022', X, Y, 2, T); if (!P(x + 1, y)) rect('#b98022', X + 14, Y, 2, T);
+    if (!P(x, y - 1)) rect('#b98022', X, Y, T, 2); if (!P(x, y + 1)) rect('#b98022', X, Y + 14, T, 2);
+    const g = GP[0];
+    if (!P(x - 1, y) && !P(x, y - 1)) rect(g, X, Y, 2, 2); if (!P(x + 1, y) && !P(x, y - 1)) rect(g, X + 14, Y, 2, 2);
+    if (!P(x - 1, y) && !P(x, y + 1)) rect(g, X, Y + 14, 2, 2); if (!P(x + 1, y) && !P(x, y + 1)) rect(g, X + 14, Y + 14, 2, 2);
+    if (SEASON === 'winter' && h % 3 === 0) rect('#f4f8fb', X + (h >> 2) % 10, Y + (h >> 5) % 12, 5, 1);
+  }
+  function drawCobble(x, y) {
+    const X = x * T, Y = y * T, h = hsh(x, y, 83);
+    rect('#8f8068', X, Y, T, T);
+    for (let r = 0; r < 3; r++) {
+      const yy = Y + r * 5 + 1, off = r % 2 ? 4 : 0;
+      for (let c = -1; c < 2; c++) {
+        const sx = X + c * 8 + off, col = ['#b5a590', '#a89884', '#bdad98'][(h >> (r * 2 + c + 1)) % 3];
+        const x0 = Math.max(X, sx), x1 = Math.min(X + T, sx + 7);
+        if (x1 > x0) { rect(col, x0, yy, x1 - x0, 4); rect('#cbbba6', x0, yy, x1 - x0, 1); }
+      }
+    }
+    if (SEASON === 'winter' && h % 4 === 0) rect('#f4f8fb', X + (h >> 2) % 10, Y + (h >> 5) % 12, 4, 1);
+  }
+  function drawBridge(x, y) {
+    const X = x * T, Y = y * T, B = (xx, yy) => yy >= 0 && yy < H && xx >= 0 && xx < W && map[yy][xx] === BRIDGE;
+    drawWater(x, y, Math.floor(NOW / 400), false);
+    for (let i = 0; i < 4; i++) { rect(i % 2 ? '#b98448' : '#c9965a', X, Y + i * 4, T, 3); rect('#8f5c2d', X, Y + i * 4 + 3, T, 1); }
+    if (!B(x, y - 1)) { rect('#7a4a24', X, Y, T, 3); rect('#a8723f', X, Y, T, 1); }
+    if (!B(x, y + 1)) { rect('#7a4a24', X, Y + 13, T, 3); rect('#5a3a1c', X, Y + 15, T, 1); }
+    if (!B(x - 1, y)) rect('#7a4a24', X, Y, 2, T); if (!B(x + 1, y)) rect('#7a4a24', X + 14, Y, 2, T);
+  }
+  function drawCliff(x, y) {
+    const X = x * T, Y = y * T, h = hsh(x, y, 91), C = (xx, yy) => xx >= 0 && xx < W && (map[yy][xx] === CLIFF || map[yy][xx] === STAIRS);
+    drawGrass(x, y);
+    rect(GP[1], X, Y, T, 4); rect(GP[2], X, Y + 3, T, 1);
+    rect('#a77d3d', X, Y + 4, T, 12); rect('#8a6128', X, Y + 7, T, 1); rect('#8a6128', X + (h % 6), Y + 11, T - (h % 6), 1);
+    rect('#c49a52', X + (h >> 2) % 10, Y + 5, 4, 1); rect('#c49a52', X + (h >> 5) % 10, Y + 9, 3, 1); rect('#6b4a22', X, Y + 14, T, 2);
+    if ((h >> 3) % 3 === 0) rect('#5a8a3a', X + (h >> 6) % 11, Y + 4, 3, 2);
+    if (!C(x - 1, y)) { rect(GP[0], X, Y + 12, 2, 4); rect('#a77d3d', X, Y + 8, 1, 4); }
+    if (!C(x + 1, y)) { rect(GP[0], X + 14, Y + 12, 2, 4); rect('#a77d3d', X + 15, Y + 8, 1, 4); }
+    if (SEASON === 'winter') rect('#f4f8fb', X, Y, T, 3);
+  }
+  function drawStairs(x, y) {
+    const X = x * T, Y = y * T;
+    drawGrass(x, y);
+    rect('#7a4a24', X, Y, 2, T); rect('#7a4a24', X + 14, Y, 2, T);
+    for (let i = 0; i < 4; i++) { rect(i % 2 ? '#b98448' : '#c9965a', X + 2, Y + i * 4, 12, 3); rect('#8f5c2d', X + 2, Y + i * 4 + 3, 12, 1); }
+  }
+  const BP = { spring: ['#3f9a45', '#5cb85a', '#2f7a3a'], summer: ['#2f8a3a', '#4aa84a', '#215c2b'], autumn: ['#a8782a', '#d9a04a', '#7a5420'], winter: ['#2f6a47', '#3f8a5a', '#245a3a'] }[SEASON];
+  function drawBush(x, y) {
+    const X = x * T, Y = y * T, h = hsh(x, y, 95);
+    drawGrass(x, y);
+    rect('rgba(0,0,0,.18)', X + 1, Y + 13, 14, 2);
+    rect(BP[2], X + 1, Y + 6, 14, 8); rect(BP[0], X + 2, Y + 3, 12, 9); rect(BP[0], X + 4, Y + 2, 8, 2);
+    rect(BP[1], X + 3, Y + 4, 5, 3); rect(BP[1], X + 9, Y + 6, 4, 2); rect(BP[2], X + 2, Y + 11, 12, 2);
+    if (SEASON === 'spring') { [[4, 8], [9, 5], [11, 10], [6, 11]].forEach(([a, b], i) => { if ((h >> i) & 1) rect('#e8446a', X + a, Y + b, 2, 2); }); }
+    if (SEASON === 'summer') { if (h & 1) rect('#ffd25e', X + 5, Y + 7, 1, 1); if (h & 2) rect('#ff9fc0', X + 10, Y + 5, 1, 1); }
+    if (SEASON === 'winter') { rect('#f4f8fb', X + 3, Y + 2, 10, 3); rect('#dfe8f0', X + 4, Y + 5, 3, 1); }
+  }
+  function drawCottage(X, Y, w, h, night, c) {
+    rect('rgba(0,0,0,.18)', X + 2, Y + h - 2, w - 2, 4);
+    rect(c.wall, X + 4, Y + 26, w - 8, h - 26);
+    for (let i = 12; i < w - 6; i += 9) rect(c.wall2, X + i, Y + 26, 1, h - 30);
+    rect('#8d8d8d', X + 4, Y + h - 4, w - 8, 4);
+    for (let r = 0; r < 26; r++) {
+      const inset = Math.max(0, 24 - r);
+      rect((r >> 2) % 2 ? c.roof : c.roof2, X + inset, Y + 2 + r, w - 2 * inset, 1); rect(c.roofHi, X + inset, Y + 2 + r, 2, 1); rect('rgba(0,0,0,.25)', X + w - inset - 2, Y + 2 + r, 2, 1);
+      if (SEASON === 'winter' && r < 9) rect('#f4f8fb', X + inset + 2, Y + 2 + r, w - 2 * inset - 4, 1);
+    }
+    rect('rgba(0,0,0,.3)', X, Y + 27, w, 2);
+    rect('#9a5a46', X + w - 24, Y, 9, 16); for (let i = 3; i < 16; i += 4) rect('#7d4636', X + w - 24, Y + i, 9, 1); rect('#6b4034', X + w - 25, Y, 11, 2);
+    const dx = X + (w >> 1) - 8;
+    rect('#f5f1e8', dx - 1, Y + h - 29, 18, 29); rect(c.door, dx, Y + h - 28, 16, 28); rect('rgba(255,255,255,.12)', dx + 2, Y + h - 26, 12, 26); rect(night ? '#ffe08a' : '#cfe9f7', dx + 4, Y + h - 24, 8, 8);
+    rect(c.door, dx + 7, Y + h - 24, 1, 8); rect('#ffd25e', dx + 12, Y + h - 14, 2, 2); rect('#a0a0a0', dx - 2, Y + h - 2, 20, 2);
+    [X + 10, X + w - 26].forEach(wx => {
+      rect(c.trim, wx, Y + h - 30, 16, 14); rect(night ? '#ffe08a' : '#cfe9f7', wx + 2, Y + h - 28, 12, 10);
+      rect(c.trim, wx + 7, Y + h - 28, 2, 10); rect(c.trim, wx + 2, Y + h - 24, 12, 1);
+      rect('#7a4f2a', wx - 1, Y + h - 16, 18, 4); rect('#e04a3c', wx + 1, Y + h - 18, 2, 2); rect('#ff8fa3', wx + 6, Y + h - 18, 2, 2); rect('#ffd25e', wx + 11, Y + h - 18, 2, 2); rect('#4aa84a', wx + 3, Y + h - 17, 2, 1);
+    });
+  }
+  function drawDeco(b, X, Y, w, h, night, now) {
+    const st = b.style;
+    if (st === 'blue') return drawCottage(X, Y, w, h, night, { wall: '#9fbce0', wall2: '#82a2cc', roof: '#4a68a8', roof2: '#3f5a96', roofHi: '#6a88c8', trim: '#f5f1e8', door: '#6e4426' });
+    if (st === 'red') return drawCottage(X, Y, w, h, night, { wall: '#ecd2a8', wall2: '#d0b488', roof: '#c8503a', roof2: '#b0432f', roofHi: '#e8705a', trim: '#7a4f2a', door: '#8a3a2a' });
+    if (st === 'cottage') return drawCottage(X, Y, w, h, night, { wall: '#c9925a', wall2: '#a8723f', roof: '#7a5a44', roof2: '#6a4a36', roofHi: '#9a7a62', trim: '#7a4f2a', door: '#5a3a1c' });
+    if (st === 'lamp') {
+      rect('#3a3a44', X + 7, Y + 5, 2, 11); rect('#3a3a44', X + 5, Y + 14, 6, 2); rect('#2a2a32', X + 4, Y + 1, 8, 4); rect(night ? '#fff0a0' : '#ffd25e', X + 5, Y + 2, 6, 3);
+      if (night) rect('rgba(255,220,120,.22)', X - 8, Y - 10, 32, 30);
+      return;
+    }
+    if (st === 'bench') {
+      rect('rgba(0,0,0,.18)', X + 1, Y + 14, w - 2, 2); rect('#7a4a24', X + 2, Y + 9, 3, 6); rect('#7a4a24', X + w - 5, Y + 9, 3, 6);
+      rect('#b97c42', X, Y + 6, w, 4); rect('#d6a064', X, Y + 6, w, 1); rect('#8f5c2d', X, Y + 10, w, 1); rect('#b97c42', X + 1, Y + 2, w - 2, 3); rect('#8f5c2d', X + 1, Y + 5, w - 2, 1);
+      return;
+    }
+    if (st === 'fountain') {
+      rect('rgba(0,0,0,.18)', X + 3, Y + 58, 58, 4);
+      rect('#6e6e78', X + 4, Y + 6, 56, 54); rect('#6e6e78', X + 2, Y + 10, 60, 46); rect('#9a9aa6', X + 4, Y + 6, 56, 3); rect('#9a9aa6', X + 2, Y + 10, 3, 46); rect('#85858f', X + 59, Y + 10, 3, 46); rect('#5a5a64', X + 4, Y + 57, 56, 3);
+      rect('#3f86c0', X + 9, Y + 12, 46, 40); const t = Math.floor(now / 300);
+      for (let i = 0; i < 6; i++) rect(i % 2 ? '#7ab8e8' : '#9fd0f4', X + 11 + ((i * 17 + t * 5) % 38), Y + 15 + i * 6, 6, 1);
+      rect('#b8b8c4', X + 28, Y + 24, 8, 16); rect('#d0d0dc', X + 26, Y + 20, 12, 5); rect('#9a9aa6', X + 25, Y + 38, 14, 3);
+      for (let i = 0; i < 6; i++) { const ph = (t + i) % 4; rect('#e8f6ff', X + 30 + (i % 2 ? 2 : -2) * (ph % 2 ? 1 : 2) + 2, Y + 14 + ph * 2 + (i % 3), 1, 2); }
+      rect('#e8f6ff', X + 31, Y + 10, 2, 8);
+      return;
+    }
+    if (st === 'hall') {
+      rect('rgba(0,0,0,.18)', X + 2, Y + h - 2, w - 2, 4);
+      rect('#a8654c', X + 4, Y + 34, w - 8, h - 34); for (let r = 0; r < 6; r++) for (let c2 = 0; c2 < 12; c2++) rect('#8f5240', X + 6 + c2 * 8 + (r % 2) * 4, Y + 36 + r * 7, 1, 5);
+      for (let r = 0; r < 14; r++) { const inset = Math.max(0, 28 - r * 2); rect(r % 2 ? '#6a3a2a' : '#5a3020', X + inset, Y + 22 + r * 1 + 4, w - 2 * inset, 2); }
+      rect('#b87258', X + 34, Y + 0, 28, 44); rect('#9a5a44', X + 34, Y + 0, 3, 44); rect('#c88a70', X + 34, Y + 0, 28, 2);
+      rect('#5a3020', X + 32, Y - 0, 32, 4); rect('#6a3a2a', X + 38, Y - 0, 20, 4);
+      rect('#f5f1e8', X + 40, Y + 8, 16, 16); rect('#2b1d14', X + 40, Y + 8, 16, 1); rect('#2b1d14', X + 40, Y + 23, 16, 1); rect('#2b1d14', X + 40, Y + 8, 1, 16); rect('#2b1d14', X + 55, Y + 8, 1, 16);
+      rect('#2b1d14', X + 47, Y + 10, 2, 7); rect('#2b1d14', X + 48, Y + 15, 5, 2);
+      rect('#4a2a1a', X + 40, Y + h - 24, 16, 24); rect('#7a4a2a', X + 42, Y + h - 22, 12, 22); rect('#ffd25e', X + 51, Y + h - 12, 2, 2);
+      [X + 10, X + 22, X + w - 32, X + w - 20].forEach(wx => { rect('#f5f1e8', wx, Y + h - 32, 10, 14); rect(night ? '#ffe08a' : '#cfe9f7', wx + 1, Y + h - 31, 8, 12); rect('#f5f1e8', wx + 4, Y + h - 31, 2, 12); });
+      rect('#8d8d8d', X + 4, Y + h - 4, w - 8, 4);
+      return;
+    }
+    if (st === 'tower') {
+      rect('rgba(0,0,0,.18)', X + 4, Y + h - 2, w - 8, 4);
+      rect('#8e8e98', X + 10, Y + 28, w - 20, h - 28); rect('#a8a8b2', X + 10, Y + 28, 4, h - 28); rect('#6e6e78', X + w - 14, Y + 28, 4, h - 28);
+      for (let r = 0; r < 9; r++) for (let c2 = 0; c2 < 4; c2++) rect('#7a7a84', X + 14 + c2 * 10 + (r % 2) * 5, Y + 30 + r * 7, 6, 1);
+      for (let r = 0; r < 30; r++) { const half = 5 + r; rect(r % 3 ? '#4a5090' : '#3f4580', X + (w >> 1) - half, Y + 2 + r, half * 2, 1); rect('#6a70b0', X + (w >> 1) - half, Y + 2 + r, 2, 1); }
+      rect('#e0a93f', X + (w >> 1) - 1, Y - 0, 2, 4);
+      rect('#4a5090', X + 6, Y + 30, w - 12, 3); rect('#3f4580', X + 6, Y + 33, w - 12, 1);
+      rect('#2b1d14', X + 28, Y + 42, 8, 10); rect(night ? '#ffe08a' : '#7aa0d0', X + 29, Y + 43, 6, 8);
+      rect('#5a3a1c', X + 24, Y + h - 24, 16, 24); rect('#7a4a24', X + 26, Y + h - 22, 12, 22); rect('#8e8e98', X + 22, Y + h - 28, 20, 5); rect('#ffd25e', X + 35, Y + h - 12, 2, 2);
+      rect('#4a9a4a', X + 12, Y + 60, 4, 14); rect('#5cb85a', X + 14, Y + 66, 3, 10); rect('#4a9a4a', X + w - 16, Y + 52, 4, 16);
+      return;
+    }
+  }
+
   function drawMountain(x, y) {
     const X = x * T, Y = y * T, h = hsh(x, y, 4);
     rect('#7f828e', X, Y, T, T); rect('#9a9da8', X + (h % 8), Y + 1, 5, 2); rect('#6a6d79', X, Y + 6, T, 2);
@@ -1331,7 +2151,7 @@
     for (let i = 0; i < 11; i++) {
       const yy = Y + h - 31 + Math.round(i * 30 / 10);
       rect('#f5f1e8', dx + 1 + i, yy, 1, 1); rect('#f5f1e8', dx + 11 - i, yy, 1, 1); rect('#f5f1e8', dx + 14 + i, yy, 1, 1); rect('#f5f1e8', dx + 24 - i, yy, 1, 1);
-    }
+      }
     for (let r = 0; r < 24; r++) {
       const inset = Math.max(0, 22 - r), c = (r >> 2) % 2 ? '#6a6d79' : '#5d606c';
       rect(c, X + inset, Y + 4 + r, w - 2 * inset, 1); rect('#8f929d', X + inset, Y + 4 + r, 2, 1); rect('#44465a', X + w - inset - 2, Y + 4 + r, 2, 1);
@@ -1446,8 +2266,12 @@
     const y0 = Math.max(0, Math.floor(camY / T)), y1 = Math.min(H - 1, Math.floor((camY + vh) / T));
     const night = s.time > 1020;
 
-    if (scene === 'mine') {
+    if (scene === 'house' || scene === 'hall') {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) drawHouseTile(x, y, map[y][x]);
+      if (scene === 'house') drawHouseObjects(now); else drawHallObjects(now);
+    } else if (scene === 'mine') {
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) drawMineTile(x, y, map[y][x], now);
+      drawMonsters(now);
     } else {
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         const tl = map[y][x];
@@ -1456,13 +2280,22 @@
         else if (tl === SOIL) drawSoil(x, y);
         else if (tl === SAND) drawSand(x, y);
         else if (tl === MOUNTAIN || tl === CAVE) drawMountain(x, y);
-        else { drawGrass(x, y); if (tl === TREE) drawTree(x, y); else if (tl === FENCE) drawFence(x, y); }
+        else if (tl === PATH) drawPath(x, y);
+        else if (tl === COBBLE) drawCobble(x, y);
+        else if (tl === BRIDGE) drawBridge(x, y);
+        else if (tl === CLIFF) drawCliff(x, y);
+        else if (tl === STAIRS) drawStairs(x, y);
+        else if (tl === BUSH) drawBush(x, y);
+        else if (tl === DECOR || tl === DECORW) drawDecorTile(x, y, now);
+        else if (tl === TCHEST) { drawGrass(x, y); drawChest(x, y); }
+        else if (tl === DECO) { drawGrass(x, y); const d = decoAt(x, y); if (d && (d.style === 'fountain' || d.style === 'lamp' || d.style === 'bench')) drawCobble(x, y); }
+        else { drawGrass(x, y); if (tl === FENCE) drawFence(x, y); }
       }
       for (const b of BUILDINGS) {
         const X = b.x * T, Y = b.y * T, w = b.w * T, h = b.h * T;
         if (X > camX + vw || X + w < camX || Y > camY + vh || Y + h < camY) continue;
         if (b.t === HOUSE) drawHouse(X, Y, w, h, night); else if (b.t === SHOP) drawShopBld(X, Y, w, h, night);
-        else if (b.t === BOX) drawBoxBld(X, Y, w, h); else if (b.t === BARN) drawBarnBld(X, Y, w, h, night); else drawCaveBld(X, Y, w, h);
+        else if (b.t === BOX) drawBoxBld(X, Y, w, h); else if (b.t === BARN) drawBarnBld(X, Y, w, h, night); else if (b.t === DECO) drawDeco(b, X, Y, w, h, night, now); else drawCaveBld(X, Y, w, h);
       }
       for (const k in plants) {
         const [x, y] = k.split(',').map(Number);
@@ -1471,32 +2304,37 @@
     }
 
     const ents = scene === 'farm' ? allEnts() : [];
+    if (scene === 'farm') drawTrees(false, x0, x1, y0, y1);
     ents.filter(e => e.dy <= ry).forEach(e => drawEnt(e, now));
     const moving = Math.abs(s.px - rx) + Math.abs(s.py - ry) > 0.05;
-    const fi = moving ? Math.floor(now / 120) % 4 : 0, bob = moving && fi % 2 ? 1 : 0;
+    const fi = moving ? Math.floor(now / 120) % 4 : 0, bob = !s.sailing && moving && fi % 2 ? 1 : 0;
     const PX = Math.round(rx * T), PY = Math.round(ry * T);
     const dir = faceName(anim ? anim.face : fishing ? fishing.face : s.face);
     const dy = anim ? bodyDy(anim, Math.min(1, (now - anim.t0) / anim.dur)) : 0;
     rect('rgba(0,0,0,.22)', PX + 4, PY + 14, 8, 2);
+    if (s.sailing && scene === 'farm') drawBoat(PX, PY, dir, now);
     if (anim && dir === 'up') drawTool(now, PX, PY, dy);
     if (fishing && dir === 'up') drawFishing(now, PX, PY);
-    const frm = SPR[dir][fi]; ctx.drawImage(frm, PX + 8 - (frm.width >> 1), PY + 16 - frm.height - bob + dy);
+    const frm = SPR[dir][fi]; ctx.drawImage(frm, PX + 8 - (frm.width >> 1), PY + 16 - frm.height - bob + dy + (s.sailing ? 2 : 0));
     if (anim && dir !== 'up') drawTool(now, PX, PY, dy);
     if (fishing && dir !== 'up') drawFishing(now, PX, PY);
     ents.filter(e => e.dy > ry).forEach(e => drawEnt(e, now));
+    if (scene === 'farm') drawTrees(true, x0, x1, y0, y1);
     drawParts();
     ctx.restore();
 
     if (scene === 'farm') {
       for (const a of amb) rect(a.c, Math.round(a.x), Math.round(a.y), a.sz, a.sz === 2 ? 1 : 1);
       if (s.time > 1080) { ctx.fillStyle = `rgba(10,15,60,${Math.min(0.5, (s.time - 1080) / 360 * 0.5)})`; ctx.fillRect(0, 0, vw, vh); }
-    } else {
+      drawLights(camX, camY, vw, vh, now);
+    } else if (scene === 'mine') {
       const sx = rx * T + 8 - camX, sy = ry * T + 8 - camY, r = 88 + Math.sin(now / 200) * 2;
       const g = ctx.createRadialGradient(sx, sy, 14, sx, sy, r);
       g.addColorStop(0, 'rgba(8,8,20,0)'); g.addColorStop(1, 'rgba(8,8,20,.9)');
       ctx.fillStyle = g; ctx.fillRect(0, 0, vw, vh);
     }
     drawFishUI();
+    if (NOW < hurtUntil) { ctx.fillStyle = 'rgba(220,40,40,.28)'; ctx.fillRect(0, 0, vw, vh); }
     if (fade) { const u = (now - fade.t0) / fade.dur, a = u < 0.5 ? u * 2 : (1 - u) * 2; ctx.fillStyle = `rgba(0,0,0,${Math.max(0, Math.min(1, a))})`; ctx.fillRect(0, 0, vw, vh); }
   }
 
@@ -1512,10 +2350,14 @@
 
   // 저장 데이터 보정 + 시작 설정
   s.seeds = Object.assign(mk(CROP_KEYS), s.seeds); s.harvest = Object.assign(mk(CROP_KEYS), s.harvest);
-  s.goods = Object.assign(mk(Object.keys(GOODS)), s.goods);
+  s.goods = Object.assign(mk(Object.keys(GOODS)), s.goods); s.ore = Object.assign(mk(Object.keys(ORES)), s.ore); s.chopped = s.chopped || {};
+  s.decor = s.decor || {}; s.crafted = s.crafted || {}; s.chests = s.chests || {}; s.sailing = false;
+  for (const k in s.decor) { const [dx0, dy0] = k.split(',').map(Number); if (farmMap[dy0] && farmMap[dy0][dx0] !== undefined) farmMap[dy0][dx0] = (s.decor[k].id === 'plank') ? DECORW : DECOR; }
+  for (const k in s.chopped) { const [cx0, cy0] = k.split(',').map(Number); if (farmMap[cy0] && farmMap[cy0][cx0] === TREE) farmMap[cy0][cx0] = GRASS; }
   s.animals = s.animals || []; s.friend = s.friend || {}; s.talked = s.talked || {}; s.gifted = s.gifted || {}; s.feed = s.feed || 0;
   if (!loaded) { const k0 = sortedCrops().find(canPlant); s.seeds = mk(CROP_KEYS); s.seeds[k0] = 5; s.seedSel = k0; }
   ensureSeed(); rebuildAnimals();
+  if (!(s.lv >= 1)) s.lv = 1; if (!(s.en >= 0)) s.en = maxEn(); if (!(s.xp >= 0)) s.xp = 0; if (!(s.hp > 0)) s.hp = maxHp(); ensureDex();
   if (s.char) s.char = String(s.char).startsWith('male') ? 'male' : 'female';
   buildChar(s.char || 'female');
   document.querySelectorAll('#charsel .pick').forEach(b => {
@@ -1529,8 +2371,12 @@
   let prev = 0;
   function loop(now) {
     NOW = now; const dt = Math.min(0.1, (now - prev) / 1000); prev = now;
-    if (!shopOpen && !bagOpen && !xOpen) { s.time += dt * (DAY_END - DAY_START) / SEC_PER_DAY; if (s.time >= DAY_END) sleep(true); }
-    updateFade(now); updateAnim(now); updateFishing(now, dt); tryMove(now); updateParts(dt); updateAmb(dt); updateEntities(dt);
+    if (!shopOpen && !bagOpen && !xOpen && !fade) {
+      s.time += dt * (DAY_END - DAY_START) / SEC_PER_DAY;
+      if (s.time >= 1440 && !s.warned) { s.warned = true; say('🌙 자정이 지났어요! 00:30까지 침대에 눕지 않으면 기절해요', 4200); }
+      if (s.time >= DAY_END) transition(() => sleep(true));
+    }
+    updateFade(now); updateAnim(now); updateFishing(now, dt); tryMove(now); updateParts(dt); updateAmb(dt); updateEntities(dt); updateMonsters(now, dt);
     if (scene === 'farm' && Math.random() < dt * 2.2) { const hb = BUILDINGS[0]; spawn(hb.x * T + 70 + rnd(-1, 1), hb.y * T - 2, rnd(-3, 3), rnd(-14, -8), 1.6, '#d9d9d9', 2, 0); }
     const k = Math.min(1, dt * (s.up.boots ? 24 : 16));
     rx += (s.px - rx) * k; ry += (s.py - ry) * k;
